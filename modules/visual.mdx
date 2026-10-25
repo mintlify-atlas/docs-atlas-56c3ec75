@@ -1,0 +1,238 @@
+---
+title: "Horion Visual Modules: ESP, Radar, Tracers, and More"
+sidebarTitle: "Visual"
+description: "Full reference for Horion's visual modules, including entity ESP boxes, radar, tracers, FullBright, Xray, HUD customization, and camera utilities for MCBE."
+---
+
+Horion's Visual category holds all modules that change what you see on screen without directly modifying movement or combat behavior. This includes entity highlighting (ESP), the on-screen radar, directional tracers, lighting manipulation, custom HUD overlays, camera detachment tools, and ore-vision Xray. Nearly every module in this category is purely client-side, meaning they affect only your own rendering.
+
+---
+
+## ESP
+
+Draws colored bounding boxes around nearby entities so you can see them through terrain and at long distances.
+
+**Tooltip:** *"Makes it easier to find entities around you"* · Default keybind: **O**
+
+| Setting | Type | Default | Description |
+|---|---|---|---|
+| `rainbow` | bool | true | Cycle box colors through a rainbow gradient |
+| `MobEsp` | bool | false | Also draw boxes around non-player mobs |
+| `2d` | bool | false | Use a flat 2D screen-space rectangle instead of a 3D world-space box |
+
+<Tip>
+  Friends (players on your friend list) are always shown in green regardless of the `rainbow` setting.
+</Tip>
+
+---
+
+## StorageESP
+
+Scans the loaded chunks and draws highlight boxes around all chest, barrel, and other storage blocks so you can locate loot containers at a glance.
+
+**Tooltip:** *"StorageESP"* · No configurable settings. Buffers a chest list each tick and renders it each frame.
+
+---
+
+## Radar
+
+Renders a minimap-style radar overlay on your HUD showing the positions of nearby entities relative to your facing direction.
+
+**Tooltip:** *"Radar"* · No configurable settings.
+
+---
+
+## Tracer
+
+Draws a line from the center of your screen to each nearby valid entity, making it easy to track targets behind walls.
+
+**Tooltip:** *"Tracer"* · No configurable settings. Lines are rendered during the level render pass.
+
+---
+
+## NameTags
+
+Replaces or enhances the default name tags displayed above players with custom-styled labels, optionally showing armor icons.
+
+**Tooltip:** *"Shows better nametags"*
+
+| Setting | Type | Default | Range | Description |
+|---|---|---|---|---|
+| `Underline` | bool | true | — | Draw an underline beneath the name text |
+| `Armor` | bool | true | — | Show worn armor icons below the name |
+| `Opacity` | float | 0.2 | 0.0 – 1.0 | Background panel opacity |
+
+---
+
+## FullBright
+
+Forces your game's gamma to a very high value so the world is always fully lit regardless of actual light levels.
+
+**Tooltip:** *"Puts your gamma to max"*
+
+| Setting | Type | Default | Range | Description |
+|---|---|---|---|---|
+| `Intensity` | float | 25.0 | -25.0 – 25.0 | Gamma override value (positive = brighter) |
+
+---
+
+## NightMode
+
+Applies a darkening filter to the environment, reducing visual brightness for a night-vision-inverted aesthetic.
+
+**Tooltip:** *"Darkens the environment"*
+
+| Setting | Type | Default | Description |
+|---|---|---|---|
+| `modifier` | float | 0.5 | Darkness multiplier applied to the scene on enable |
+
+<Note>
+  The `modifier` setting is defined in the header but is commented out in the constructor, so it does not appear in the ClickGUI by default. The value is applied once on enable.
+</Note>
+
+---
+
+## RainbowSky
+
+Replaces the sky color with a continuously cycling animated rainbow gradient.
+
+**Tooltip:** *"RainbowSky"* · No configurable settings.
+
+---
+
+## Freecam
+
+Detaches the camera from your player character so you can fly the view freely around the world while your character remains stationary.
+
+**Tooltip:** *"Move your cam without moving the player"* · Default keybind: **V**
+
+| Setting | Type | Default | Range | Description |
+|---|---|---|---|---|
+| `Speed` | float | 0.325 | 0.50 – 1.25 | Camera movement speed |
+
+<Note>
+  Freecam is categorized under **Misc** in the source (`Category::MISC`). Your player does not send movement packets while Freecam is active.
+</Note>
+
+---
+
+## Freelook
+
+Allows you to freely rotate the camera view (look around) without changing your character's facing direction or sending rotation packets to the server.
+
+**Tooltip:** *"Freelook"* · No configurable settings. Toggle off to snap the camera back.
+
+---
+
+## ViewModel
+
+Adjusts the position, scale, and translation of the item held in your hand, letting you customize how it appears in first-person view.
+
+**Tooltip:** *"Custom item view model"*
+
+| Setting | Type | Default | Range | Description |
+|---|---|---|---|---|
+| `Reset` | bool | false | — | Reset all transforms to default |
+| `Translate` | bool | true | — | Apply translation offsets |
+| `Scale` | bool | true | — | Apply scale factors |
+| `TranslateX` | float | 0.0 | -2.0 – 2.0 | Horizontal translation |
+| `TranslateY` | float | 0.0 | -2.0 – 2.0 | Vertical translation |
+| `TranslateZ` | float | 0.0 | -2.0 – 2.0 | Depth translation |
+| `ScaleX` | float | 1.0 | 0.0 – 2.0 | Horizontal scale factor |
+| `ScaleY` | float | 1.0 | 0.0 – 2.0 | Vertical scale factor |
+| `ScaleZ` | float | 1.0 | 0.0 – 2.0 | Depth scale factor |
+
+---
+
+## Compass
+
+Draws an on-screen compass bar showing cardinal directions and, optionally, the direction to saved waypoints.
+
+**Tooltip:** *"Compass"*
+
+| Setting | Type | Default | Range | Description |
+|---|---|---|---|---|
+| `Opacity` | float | 0.5 | 0.1 – 1.0 | Compass bar transparency |
+| `Range` | int | 90 | 45 – 180 | Visible field-of-view arc in degrees |
+| `Show Waypoints` | bool | true | — | Render waypoint direction indicators on the compass |
+
+---
+
+## TimeChanger
+
+Overrides the client-side time of day, letting you make it appear perpetually day, night, or any custom time without affecting the server.
+
+**Tooltip:** *"Changes the client-sided time"*
+
+| Setting | Type | Default | Range | Description |
+|---|---|---|---|---|
+| `modifier` | float | 0.5 | 0.1 – 1.0 | Time value fraction (0 = midnight, 0.5 = midday) |
+
+---
+
+## HudModule
+
+Controls Horion's custom HUD overlays, including the module array list, TabGUI, watermark, coordinates, armor display, keystrokes, FPS, and CPS counters.
+
+**Tooltip:** *"Displays ArrayList/TabGUI"*
+
+| Setting | Type | Default | Description |
+|---|---|---|---|
+| `TabGui` | bool | true | Show the TabGUI module selector |
+| `ArrayList` | bool | true | Show the active module list on the right side of the screen |
+| `ClickToggle` | bool | true | Allow clicking module names in the ArrayList to toggle them |
+| `Watermark` | bool | true | Show the Horion watermark in the corner |
+| `Coordinates` | bool | false | Display current XYZ coordinates |
+| `Show Keybinds` | bool | true | Show each module's keybind next to its name |
+| `Show ArmorHUD` | bool | true | Display your currently worn armor durability |
+| `Keystrokes` | bool | true | Show a keystroke overlay (WASD + mouse buttons) |
+| `Show FPS` | bool | true | Display current frames per second |
+| `Show CPS` | bool | true | Display clicks per second |
+| `Always show` | bool | false | Keep HUD visible even when no modules are enabled |
+| `Scale` | float | 1.0 | 0.5 – 1.5 | Global HUD scale factor |
+
+---
+
+## Xray
+
+Makes most solid blocks render as transparent, revealing only ores, chests, and other target blocks through walls.
+
+**Tooltip:** *"Xray"* · No configurable settings. Disabling restores the smooth lighting setting automatically.
+
+<Warning>
+  Xray temporarily disables smooth lighting to function. It will be restored when you disable the module.
+</Warning>
+
+---
+
+## Waypoints
+
+Renders floating holographic labels in the world at user-defined coordinates, visible through terrain.
+
+**Tooltip:** *"Shows holograms for user-defined coordinates"*
+
+| Setting | Type | Default | Range | Description |
+|---|---|---|---|---|
+| `Size` | float | 0.6 | 0.3 – 1.6 | Label text size |
+| `Interdimensional` | bool | true | — | Show waypoints from all dimensions, not just the current one |
+| `Show coordinates` | bool | false | — | Display the XYZ coordinate beneath the label |
+
+<Note>
+  Waypoints is categorized under **Visual** in the source. Use the `.waypoint` command to add and remove waypoints by name.
+</Note>
+
+---
+
+## ClickGuiMod
+
+The module that renders and controls the ClickGUI overlay itself.
+
+**Tooltip:** *"ClickGuiMod"*
+
+| Setting | Type | Default | Description |
+|---|---|---|---|
+| `showTooltips` | bool | true | Show module description tooltips in the ClickGUI |
+
+<Tip>
+  Press **Right Shift** (default) to open or close the ClickGUI. You can rebind it like any other module with `.bind ClickGuiMod <key>`.
+</Tip>

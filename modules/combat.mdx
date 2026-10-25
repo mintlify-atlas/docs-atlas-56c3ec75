@@ -1,0 +1,218 @@
+---
+title: "Horion Combat Modules: Aimbot, KillAura, and More"
+sidebarTitle: "Combat"
+description: "Complete reference for Horion's combat modules, covering automated targeting, hit detection, PvP auras, knockback control, and crystal automation."
+---
+
+Horion's Combat category contains modules purpose-built for player-versus-player encounters in Minecraft: Bedrock Edition. From smooth aim assistance and multi-target kill auras to crystal automation and knockback suppression, these modules let you fine-tune every aspect of how your client interacts with enemies. Each module exposes granular settings so you can balance effectiveness against detectability.
+
+<Warning>
+  Using combat modules on servers that prohibit client modifications may result in bans or other punishments. Always check a server's rules before enabling any combat module.
+</Warning>
+
+---
+
+## Aimbot
+
+Automatically rotates your camera toward the nearest valid entity within range.
+
+**Tooltip:** *"Automatically aims at the nearest entity"*
+
+| Setting | Type | Default | Range | Description |
+|---|---|---|---|---|
+| `range` | float | 4.0 | 3 – 8 | Maximum targeting distance in blocks |
+| `Require click` | bool | false | — | Only aim when left mouse button is held |
+| `only swords/axes` | bool | false | — | Restrict aiming to melee weapon slots |
+| `vertical` | bool | true | — | Adjust pitch (up/down) as well as yaw |
+| `horizontal speed` | float | 50.0 | 10 – 90 | How quickly the aim snaps horizontally |
+| `vertical speed` | float | 50.0 | 10 – 90 | How quickly the aim snaps vertically |
+| `horizontal range` | float | 60.0 | 20 – 180 | Maximum horizontal angular delta to target |
+| `vertical range` | float | 40.0 | 20 – 180 | Maximum vertical angular delta to target |
+| `aimlock` | bool | false | — | Instantly snap to target instead of smoothing |
+
+---
+
+## KillAura
+
+Automatically attacks all valid player entities within range every game tick.
+
+**Tooltip:** *"Attacks entities around you automatically"* · Default keybind: **P**
+
+| Setting | Type | Default | Range | Description |
+|---|---|---|---|---|
+| `MultiAura` | bool | true | — | Attack all targets in range each tick |
+| `MobAura` | bool | false | — | Include mobs (non-player entities) |
+| `range` | float | 6.0 | 2 – 20 | Attack radius in blocks |
+| `delay` | int | 0 | 0 – 20 | Ticks between attack cycles |
+| `hurttime` | bool | true | — | Skip entities still in hurt cooldown |
+| `AutoWeapon` | bool | false | — | Auto-switch to highest-damage hotbar item |
+| `Rotations` | bool | false | — | Visibly rotate toward the target |
+| `Silent Rotations` | bool | true | — | Send rotation in packets without visual rotation |
+
+---
+
+## BowAimbot
+
+Leads your aim to account for arrow travel time when shooting a bow.
+
+**Tooltip:** *"Aimbot, but for bows"*
+
+| Setting | Type | Default | Description |
+|---|---|---|---|
+| `silent` | bool | true | Apply aim correction silently via packets |
+| `predict` | bool | false | Enable arrow trajectory prediction |
+| `visualize` | bool | false | Render a predicted arc overlay |
+
+---
+
+## TriggerBot
+
+Automatically attacks when your crosshair is directly over a valid entity.
+
+**Tooltip:** *"Attacks entities around you automatically"*
+
+| Setting | Type | Default | Range | Description |
+|---|---|---|---|---|
+| `sword` | bool | true | — | Only trigger when holding a sword or axe |
+| `delay` | int | 0 | 0 – 20 | Ticks between trigger attacks |
+
+---
+
+## AutoClicker
+
+Simulates mouse clicks automatically, removing the need to physically click.
+
+**Tooltip:** *"A simple autoclicker, automatically clicks for you"*
+
+| Setting | Type | Default | Range | Description |
+|---|---|---|---|---|
+| `rightclick` | bool | false | — | Auto right-click instead of left-click |
+| `only weapons` | bool | true | — | Restrict auto-clicking to weapon/tool items |
+| `break blocks` | bool | true | — | Allow clicking while breaking blocks |
+| `delay` | int | 0 | 0 – 20 | Ticks between simulated clicks |
+| `hold` | bool | false | — | Hold the click button rather than toggling |
+
+---
+
+## CrystalAura
+
+Places end crystals on obsidian/bedrock and immediately destroys them to deal burst damage.
+
+**Tooltip:** *"Destroys nearby Crystals"* · Default keybind: **Numpad 0**
+
+| Setting | Type | Default | Range | Description |
+|---|---|---|---|---|
+| `Range` | int | 10 | 1 – 10 | General operation radius |
+| `Crystal range` | int | 10 | 1 – 15 | Max distance to attack existing crystals |
+| `Place range` | int | 3 | 1 – 5 | Search radius for valid placement blocks |
+| `Player range` | int | 5 | 1 – 10 | Radius within which to target players |
+| `Auto select` | bool | true | — | Auto-switch to end crystals in hotbar |
+| `Autoplace` | bool | true | — | Automatically place crystals |
+| `Enhance place` | bool | true | — | Use enhanced placement algorithm |
+| `Enhance destroy` | bool | true | — | Only destroy crystals near targeted players |
+| `preview` | bool | true | — | Render a preview box at the placement location |
+
+---
+
+## Criticals
+
+Forces every melee hit to register as a critical hit by spoofing the player's fall state in the outgoing packet.
+
+**Tooltip:** *"Criticals"* · No configurable settings.
+
+<Tip>
+  Criticals works at the packet level and does not require you to actually jump — it silently modifies `MovePlayerPacket` data to flag the hit as airborne.
+</Tip>
+
+---
+
+## Velocity
+
+Reduces or eliminates knockback received from enemy hits by modifying incoming velocity values.
+
+**Tooltip:** *"Don't ever take knockback again"*
+
+| Setting | Type | Default | Range | Description |
+|---|---|---|---|---|
+| `Linear Modifier` | float | 0.0 | 0.0 – 1.0 | Horizontal knockback multiplier (0 = none) |
+| `Height Modifier` | float | 0.0 | 0.0 – 1.0 | Vertical knockback multiplier (0 = none) |
+
+<Note>
+  Velocity is categorized under **Movement** in the source (`Category::MOVEMENT`), but it is functionally a combat utility used to survive in PvP.
+</Note>
+
+---
+
+## InfiniteAura
+
+A kill aura variant that operates at extreme ranges far beyond normal interaction limits.
+
+**Tooltip:** *"Killaura with infinite reach"*
+
+| Setting | Type | Default | Range | Description |
+|---|---|---|---|---|
+| `multiaura` | bool | false | — | Attack all targets in range simultaneously |
+| `range` | float | 15.0 | 15 – 100 | Attack radius in blocks |
+| `delay` | int | 15 | 15 – 20 | Ticks between attack cycles |
+
+---
+
+## Hitbox
+
+Expands the hitbox size of nearby entities, making them significantly easier to hit.
+
+**Tooltip:** *"Increase an entity's hitbox size"*
+
+| Setting | Type | Default | Range | Description |
+|---|---|---|---|---|
+| `Height` | float | 2.0 | 1.8 – 10 | Hitbox height multiplier |
+| `Width` | float | 4.0 | 0.6 – 10 | Hitbox width multiplier |
+
+---
+
+## Reach
+
+Extends your maximum melee attack and block-interaction distance beyond the vanilla limit.
+
+**Tooltip:** *"Increases your reach"*
+
+| Setting | Type | Default | Range | Description |
+|---|---|---|---|---|
+| `Reach Value` | float | 3.0 | 3.0 – 7.0 | Custom reach distance in blocks |
+
+---
+
+## Teams
+
+Prevents combat modules from attacking teammates, identified by name color or ally status.
+
+**Tooltip:** *"Don't attack team members!"*
+
+| Setting | Type | Default | Description |
+|---|---|---|---|
+| `is allied` | bool | false | Skip players on your friends list |
+| `same color` | bool | true | Skip players whose name tag shares your color |
+
+<Note>
+  Teams integrates with KillAura, InfiniteAura, and other targeting modules. Enable it whenever you're playing on a team-based server.
+</Note>
+
+---
+
+## AntiBot
+
+Filters out bot entities so that combat modules do not waste attacks on them.
+
+**Tooltip:** *"Enable this module to filter bots!"*
+
+| Setting | Type | Default | Description |
+|---|---|---|---|
+| `Hitbox Check` | bool | true | Ignore entities with zero-size hitboxes |
+| `Invisible Check` | bool | true | Ignore invisible entities |
+| `EntityID Check` | bool | true | Ignore entities with suspicious ID patterns |
+| `Other Check` | bool | true | Apply additional heuristic bot checks |
+| `Extra Check` | bool | false | Enable experimental extra bot detection |
+
+<Note>
+  AntiBot is categorized under **Player** in the source (`Category::PLAYER`), but it directly affects combat module targeting behavior.
+</Note>

@@ -1,0 +1,222 @@
+---
+title: "Horion Miscellaneous Modules: Blink, Crasher, Spammer"
+sidebarTitle: "Misc"
+description: "Full reference for Horion's miscellaneous modules, covering packet buffering, network logging, crash exploits, chat automation, movement spoofing, and server utilities."
+---
+
+Horion's Misc category is a catch-all for modules that don't fit cleanly into combat, movement, visual, or player utility. It includes packet-level tools (Blink, PacketLogger, NoPacket), server crash exploits (Crasher, NoPaintingCrash), chat automation (Spammer), cosmetic tricks (Derp), safety helpers (AntiVoid — actually in Movement), and the ClickGUI module itself. Several modules from other logical groupings (Freecam, Teleport, Fucker, EditionFaker) are also registered under `Category::MISC` in the source code.
+
+<Warning>
+  Modules such as Crasher and NoPaintingCrash involve crash-inducing packet exploits. Using them to intentionally crash servers or other players is likely to result in permanent bans and may violate the terms of service of any server you are connected to. Use these modules only in controlled, private environments.
+</Warning>
+
+---
+
+## Blink
+
+Buffers all outgoing movement packets (`MovePlayerPacket` and `PlayerAuthInputPacket`) while enabled, then releases them all at once when disabled — effectively making your player appear frozen on the server until you "blink" back.
+
+**Tooltip:** *"Blink"* · No configurable settings. Packet holders are flushed on disable.
+
+<Tip>
+  Blink is useful for rubber-banding to a previous server-side position, or for temporarily desynchronizing your client and server positions.
+</Tip>
+
+---
+
+## PacketLogger
+
+Logs every outgoing packet sent from your client to the server, printing the packet type to the in-game chat for debugging and analysis.
+
+**Tooltip:** *"PacketLogger"* · No configurable settings. Hooks `onSendPacket` and logs each packet type name.
+
+---
+
+## Crasher
+
+Sends a sequence of malformed or exploit packets designed to crash or heavily lag the target server.
+
+**Tooltip:** *"Crasher"* · No configurable settings. Runs on `onEnable`, `onTick`, and intercepts `onSendPacket`.
+
+<Warning>
+  Using Crasher against public or private servers without explicit permission is illegal under many jurisdictions and violates virtually all server terms of service. This module is documented for completeness only.
+</Warning>
+
+---
+
+## Spammer
+
+Automatically sends a configurable chat message to the server at a regular interval.
+
+**Tooltip:** *"Spams a message in a specified delay"*
+
+| Setting | Type | Default | Range | Description |
+|---|---|---|---|---|
+| `delay` | int | 2 | 1 – 10 | Time between messages in seconds (multiplied by 20 ticks) |
+| `length` | int | 8 | 1 – 60 | Length of the random suffix appended when bypass is enabled |
+| `bypass` | bool | true | — | Append a random string to each message to bypass duplicate-message filters |
+
+The default message is:
+```
+Horion - the best minecraft bedrock utility mod - horion.download
+```
+
+Use the `.spammer` command or the ClickGUI to change the message text.
+
+---
+
+## Derp
+
+Rapidly alternates your head rotation in erratic patterns, creating a disorienting visual effect for observers and sometimes confusing anticheat rotation checks.
+
+**Tooltip:** *"lol you stupid"*
+
+| Setting | Type | Default | Description |
+|---|---|---|---|
+| `ihaveastroke` | bool | false | Use a more extreme, stroke-like rotation pattern |
+| `packet mode` | bool | false | Apply rotations via sent packets instead of local view angle changes |
+
+---
+
+## AntiVoid
+
+Saves your position each tick and teleports you back to it if you fall more than a configurable number of blocks downward into the void.
+
+**Tooltip:** *"Automatically teleports you back up if you fall down more than X blocks"*
+
+| Setting | Type | Default | Range | Description |
+|---|---|---|---|---|
+| `distance` | int | 5 | 1 – 20 | Freefall blocks before triggering the save-position teleport |
+
+<Note>
+  AntiVoid is categorized under **Movement** in the source (`Category::MOVEMENT`), not Misc.
+</Note>
+
+---
+
+## NoPacket
+
+Blocks all outgoing packets from being sent to the server, effectively disconnecting your client from the server without terminating the connection.
+
+**Tooltip:** *"NoPacket"* · No configurable settings. `allowAutoStart()` returns false (cannot be enabled on startup). Triggers an alert on enable.
+
+<Warning>
+  Enabling NoPacket will cause your client to appear frozen or disconnected to the server. Most servers will kick you after a timeout.
+</Warning>
+
+---
+
+## NoPaintingCrash
+
+Protects your client from a crash exploit that sends malformed painting entity packets, which would otherwise cause a native crash.
+
+**Tooltip:** *"NoPaintingCrash"* · No configurable settings. Passively intercepts painting-related packets.
+
+---
+
+## NoWeb
+
+Cancels the movement slowdown applied when you walk into cobwebs, letting you move at full speed through them.
+
+**Tooltip:** *"NoWeb"* · No configurable settings. Applied each tick via movement handler.
+
+<Note>
+  NoWeb is categorized under **Movement** in the source (`Category::MOVEMENT`).
+</Note>
+
+---
+
+## Teams
+
+Prevents targeting modules from attacking players on your team, detected by matching name tag color or ally list membership.
+
+**Tooltip:** *"Don't attack team members!"*
+
+| Setting | Type | Default | Description |
+|---|---|---|---|
+| `is allied` | bool | false | Skip players who are on your Horion friends list |
+| `same color` | bool | true | Skip players whose name tag color matches yours |
+
+<Note>
+  Teams is categorized under **Combat** in the source (`Category::COMBAT`). It integrates with KillAura, InfiniteAura, and other targeting modules.
+</Note>
+
+---
+
+## Freecam *(Misc)*
+
+Detaches your camera and lets you fly it freely around the world while your character remains stationary on the server.
+
+**Tooltip:** *"Move your cam without moving the player"* · Default keybind: **V**
+
+| Setting | Type | Default | Range | Description |
+|---|---|---|---|---|
+| `Speed` | float | 0.325 | 0.50 – 1.25 | Camera flight speed |
+
+---
+
+## Teleport *(Misc)*
+
+Teleports your character to a targeted block by clicking on it, using movement packet injection.
+
+**Tooltip:** *"Click a block to teleport to it"*
+
+| Setting | Type | Default | Description |
+|---|---|---|---|
+| `Only Hand` | bool | false | Require a specific item in hand |
+| `Push` | bool | false | Use push-packet bypass method |
+
+---
+
+## Fucker *(Misc)*
+
+Automatically destroys specific block types (beds, eggs, cakes, etc.) within a configurable radius.
+
+**Tooltip:** *"Destroys certain blocks around you"* · Default keybind: **Numpad 9**
+
+| Setting | Type | Default | Range | Description |
+|---|---|---|---|---|
+| `Range` | int | 5 | 1 – 10 | Destruction radius in blocks |
+| `Beds` | bool | true | — | Target bed blocks |
+| `Eggs` | bool | true | — | Target dragon eggs |
+| `Cakes` | bool | true | — | Target cake blocks |
+| `Treasures` | bool | true | — | Target treasure blocks |
+| `Chests` | bool | false | — | Target chest blocks |
+| `Barrels` | bool | false | — | Target barrel blocks |
+
+---
+
+## EditionFaker *(Misc)*
+
+Reports a different Minecraft edition identifier to the server, potentially bypassing edition-specific server restrictions.
+
+**Tooltip:** *"EditionFaker"* · No configurable settings exposed to the GUI. Edition is returned internally via `getFakedEdition()`.
+
+---
+
+## AntiImmobile *(Misc)*
+
+Keeps movement packets flowing to prevent the server from flagging your client as immobile or idle.
+
+**Tooltip:** *"AntiImmobile"* · No configurable settings.
+
+---
+
+## ClickGuiMod *(Misc)*
+
+The module that renders and manages the Horion ClickGUI overlay.
+
+**Tooltip:** *"ClickGuiMod"*
+
+| Setting | Type | Default | Description |
+|---|---|---|---|
+| `showTooltips` | bool | true | Display module description tooltips in the GUI |
+
+Press **Right Shift** (default) to open the ClickGUI. Rebind with:
+```
+.bind ClickGuiMod <key>
+```
+
+<Note>
+  ClickGuiMod is categorized under **Visual** in the source (`Category::VISUAL`). It is listed here because it is the central control panel for all modules in every category.
+</Note>

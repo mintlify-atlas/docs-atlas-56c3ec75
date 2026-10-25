@@ -1,0 +1,292 @@
+---
+title: "Horion Movement Modules: Fly, Speed, Bhop, and More"
+sidebarTitle: "Movement"
+description: "Full reference for Horion's movement modules, including flight, speed boosts, bunny hopping, wall climbing, scaffolding, and advanced traversal in MCBE."
+---
+
+Horion's Movement category is the largest in the client, covering everything from basic flight and speed to advanced mechanics like wall-climbing, air jumping, block placement beneath your feet, and freezing mid-air. Whether you need to traverse a large map quickly or outmaneuver opponents in PvP, these modules give you precise control over how your character moves through the world.
+
+<Warning>
+  Many movement modules are highly visible to server anticheat systems. Use them carefully on servers with active moderation.
+</Warning>
+
+---
+
+## Fly
+
+Enables creative-like flight with a configurable mode and speed setting.
+
+**Tooltip:** *"Enables fly like in creative mode"*
+
+| Setting | Type | Default | Range | Description |
+|---|---|---|---|---|
+| `Mode` | enum | Fly | Fly, CubeGlide | Flight algorithm — `Fly` uses vanilla creative flight; `CubeGlide` uses a packet-based glide bypass |
+| `CubeGlide Speed` | float | 1.5 | 1.0 – 3.0 | Forward speed when CubeGlide mode is selected |
+
+<Tip>
+  `CubeGlide` mode sends alternating position packets to simulate gliding and is designed for specific server bypass scenarios. Use `Fly` mode for standard creative-style flight.
+</Tip>
+
+---
+
+## Speed
+
+Overrides your movement speed attribute to move faster than normal.
+
+**Tooltip:** *"Speed up!"* · Default keybind: **Numpad 2**
+
+| Setting | Type | Default | Range | Description |
+|---|---|---|---|---|
+| `speed` | float | 1.6 | 0.1 – 3.0 | Movement speed multiplier applied each tick |
+
+---
+
+## Bhop
+
+Automatically jumps at the optimal moment to maintain sprinting speed and momentum, similar to bunny hopping in other games.
+
+**Tooltip:** *"Hop around like a bunny!"*
+
+| Setting | Type | Default | Range | Description |
+|---|---|---|---|---|
+| `Speed` | float | 0.325 | 0.1 – 0.8 | Horizontal velocity applied during each hop |
+
+---
+
+## Phase
+
+Allows you to move through solid blocks by disabling collision detection.
+
+**Tooltip:** *"Phase through blocks"* · No configurable settings.
+
+<Warning>
+  Phase can cause you to fall through the world if misused. Toggle it off before dismounting into air.
+</Warning>
+
+---
+
+## NoFall
+
+Prevents fall damage by spoofing the `onGround` flag in outgoing `MovePlayerPacket`s so the server never registers a landing.
+
+**Tooltip:** *"NoFall"* · No configurable settings.
+
+---
+
+## Spider
+
+Lets you climb any solid wall surface, similar to a spider mob.
+
+**Tooltip:** *"Climb walls"*
+
+| Setting | Type | Default | Range | Description |
+|---|---|---|---|---|
+| `Speed` | float | 0.6 | 0.1 – 1.0 | Upward climbing speed per tick |
+| `Avoid Overshooting` | bool | true | — | Prevent overshooting the top of a wall |
+
+---
+
+## Step
+
+Increases your step height so you can walk up blocks without jumping.
+
+**Tooltip:** *"Increases your step height"*
+
+| Setting | Type | Default | Range | Description |
+|---|---|---|---|---|
+| `height` | float | 2.0 | 1.0 – 10.0 | Maximum block height that can be stepped over |
+
+---
+
+## AirJump
+
+Allows you to jump again while already airborne (double jump or multi-jump).
+
+**Tooltip:** *"Jump even you're not on the ground"* · Default keybind: **G**
+
+| Setting | Type | Default | Description |
+|---|---|---|---|
+| `Legacy` | bool | false | Use an alternative jump implementation for older server versions |
+
+---
+
+## HighJump
+
+Multiplies your jump power so you jump much higher than normal.
+
+**Tooltip:** *"Jump higher than ever before"*
+
+| Setting | Type | Default | Range | Description |
+|---|---|---|---|---|
+| `Jump Height` | float | 1.8 | 0.5 – 5.0 | Jump velocity multiplier |
+
+---
+
+## Glide
+
+Dramatically reduces your downward velocity to make you fall very slowly, like a glider.
+
+**Tooltip:** *"Float down"*
+
+| Setting | Type | Default | Range | Description |
+|---|---|---|---|---|
+| `value` | float | -0.01 | -2.0 – 1.0 | Vertical velocity modifier per tick (negative = slow descent) |
+
+---
+
+## Jesus
+
+Allows you to walk on the surface of water without sinking.
+
+**Tooltip:** *"Jesus"* · No configurable settings.
+
+---
+
+## Jetpack
+
+Continuously propels you upward as if wearing a jetpack, using packet-based vertical motion.
+
+**Tooltip:** *"Fly around like you had a Jetpack!"* · Default keybind: **F**
+
+| Setting | Type | Default | Range | Description |
+|---|---|---|---|---|
+| `speed` | float | 1.0 | 0.2 – 3.0 | Upward velocity per tick |
+| `Bypass` | bool | false | — | Use an alternate packet sequence to bypass some anticheat |
+
+---
+
+## AutoSprint
+
+Keeps you sprinting at all times without needing to double-tap or hold the sprint key.
+
+**Tooltip:** *"AutoSprint"*
+
+| Setting | Type | Default | Description |
+|---|---|---|---|
+| `alldirections` | bool | true | Sprint in all directions, not just forward |
+
+---
+
+## AirSwim
+
+Lets you perform swimming animations and movement while in open air, bypassing certain gravity checks.
+
+**Tooltip:** *"AirSwim"* · No configurable settings.
+
+---
+
+## FastLadder
+
+Greatly increases your climbing speed on ladders and vines.
+
+**Tooltip:** *"Climb up ladders faster"*
+
+| Setting | Type | Default | Range | Description |
+|---|---|---|---|---|
+| `Speed` | float | 0.6 | 0.1 – 1.0 | Climb speed per tick |
+
+---
+
+## CubeGlide
+
+A specialized gliding module designed for CubeCraft-style elytra bypass, using position packets to maintain forward momentum.
+
+**Tooltip:** *"Glide on Cubecraft"*
+
+| Setting | Type | Default | Range | Description |
+|---|---|---|---|---|
+| `Speed` | float | 1.5 | 1.0 – 3.0 | Forward glide speed per tick |
+
+---
+
+## AirStuck
+
+Freezes your position completely in mid-air by sending repeated static position packets to the server.
+
+**Tooltip:** *"AirStuck"* · No configurable settings.
+
+---
+
+## Tower
+
+Places blocks beneath you while you jump to rapidly build a tower straight up.
+
+**Tooltip:** *"Like scaffold, but vertically and a lot faster"*
+
+| Setting | Type | Default | Range | Description |
+|---|---|---|---|---|
+| `motion` | float | 0.5 | 0.3 – 1.0 | Upward motion applied per block placement cycle |
+
+<Note>
+  Tower is categorized under **World** in the source (`Category::WORLD`). You must be holding a placeable block in your hand.
+</Note>
+
+---
+
+## Scaffold
+
+Automatically places blocks beneath your feet as you walk, preventing you from falling off edges.
+
+**Tooltip:** *"Automatically build blocks beneath you"* · Default keybind: **Numpad 1**
+
+| Setting | Type | Default | Description |
+|---|---|---|---|
+| `Spoof` | bool | false | Silently switch to a block item in your hotbar without visually changing your hand |
+| `Staircase Mode` | bool | false | Place blocks in a descending staircase pattern instead of flat |
+
+<Note>
+  Scaffold is categorized under **World** in the source (`Category::WORLD`). Requires at least one placeable block in your hotbar.
+</Note>
+
+---
+
+## Twerk
+
+Rapidly alternates between crouching and standing (crouch-spam), sometimes used to confuse anticheat or opponents.
+
+**Tooltip:** *"Crouch Spam"*
+
+| Setting | Type | Default | Range | Description |
+|---|---|---|---|---|
+| `delay` | float | 1.0 | 0.05 – 10.0 | Interval in ticks between each crouch toggle |
+
+---
+
+## AntiVoid
+
+Teleports you back to a safe saved position if you fall more than a configurable number of blocks into the void.
+
+**Tooltip:** *"Automatically teleports you back up if you fall down more than X blocks"*
+
+| Setting | Type | Default | Range | Description |
+|---|---|---|---|---|
+| `distance` | int | 5 | 1 – 20 | Number of blocks of freefall before triggering the save |
+
+---
+
+## NoSlowDown
+
+Removes the movement slowdown applied when holding items such as bows, food, shields, or when in cobwebs.
+
+**Tooltip:** *"NoSlowDown"* · No configurable settings. Operates via memory patch on enable/disable.
+
+---
+
+## NoWeb
+
+Prevents cobwebs from slowing your movement by modifying web collision handling each tick.
+
+**Tooltip:** *"NoWeb"* · No configurable settings.
+
+---
+
+## Velocity *(Movement)*
+
+Eliminates or reduces knockback by intercepting and modifying velocity applied to your player.
+
+**Tooltip:** *"Don't ever take knockback again"*
+
+| Setting | Type | Default | Range | Description |
+|---|---|---|---|---|
+| `Linear Modifier` | float | 0.0 | 0.0 – 1.0 | Horizontal knockback multiplier |
+| `Height Modifier` | float | 0.0 | 0.0 – 1.0 | Vertical knockback multiplier |

@@ -1,0 +1,281 @@
+---
+title: "How the Horion Module System Works"
+sidebarTitle: "Module System"
+description: "Learn how IModule's lifecycle hooks, seven categories, typed settings, and keybinds combine to power every feature in the Horion client."
+---
+
+Every enhancement in Horion — from Fly to KillAura — is built as a **module**: a C++ class that inherits from `IModule`, registers its settings, and responds to lifecycle events dispatched by the game engine. Understanding this architecture helps you make sense of the ClickGUI, the `.toggle` command, the config system, and Horion's JavaScript scripting API, all of which talk to modules through the same interface.
+
+## The `IModule` Base Class
+
+`IModule` is the abstract base defined in `Module/Modules/Module.h`. Every concrete module must implement `getModuleName()` and can override any of the virtual lifecycle hooks it needs. The class holds three private pieces of state that the rest of the client reads through accessors:
+
+| Field | Type | Purpose |
+|---|---|---|
+| `enabled` | `bool` | Whether the module is currently active |
+| `keybind` | `int` | Virtual-key code that toggles the module |
+| `category` | `Category` | Grouping used by the ClickGUI |
+
+```cpp
+// Simplified view of the IModule private fields (Module.h)
+class IModule {
+private:
+    bool enabled  = false;
+    int  keybind  = 0x0;
+    bool extended = false;
+    vec2_t ModulePos;
+    Category category;
+    const char* tooltip;
+    std::vector<SettingEntry*> settings;
+    // ...
+};
+```
+
+<Note>
+`IModule` is constructed with `IModule(int key, Category c, const char* tooltip)`. Concrete modules call this constructor from their own initialiser list, passing a default keybind (or `0x0` for none), the appropriate category, and a short description string shown in the ClickGUI tooltip.
+</Note>
+
+## Categories
+
+The `Category` enum partitions modules into seven logical groups. The ClickGUI uses these values to organise its tabs, and the `.modules` command can filter by them.
+
+```cpp
+enum class Category {
+    COMBAT   = 0,
+    VISUAL   = 1,
+    MOVEMENT = 2,
+    PLAYER   = 3,
+    WORLD    = 4,
+    MISC     = 5,
+    CUSTOM   = 6
+};
+```
+
+<CardGroup cols={2}>
+  <Card title="COMBAT (0)" icon="sword">
+    Modules that interact with or target other entities — KillAura, CrystalAura, Aimbot, Reach, TriggerBot, etc.
+  </Card>
+  <Card title="VISUAL (1)" icon="eye">
+    Rendering and HUD overlays — ESP, NameTags, FullBright, Tracers, Xray, Radar, StorageESP, etc.
+  </Card>
+  <Card title="MOVEMENT (2)" icon="person-running">
+    Locomotion modifiers — Fly, Speed, Bhop, Glide, Jesus, Spider, Step, HighJump, etc.
+  </Card>
+  <Card title="PLAYER (3)" icon="user">
+    Local-player utilities — AutoTotem, AutoArmor, AutoGapple, NoFall, FastEat, InventoryMove, etc.
+  </Card>
+  <Card title="WORLD (4)" icon="earth-americas">
+    World interaction — Scaffold, Nuker, Fucker, InstaBreak, Reach, ChestAura, etc.
+  </Card>
+  <Card title="MISC (5)" icon="puzzle-piece">
+    Miscellaneous tools — Spammer, Blink, Timer, EditionFaker, Crasher, Teleport, etc.
+  </Card>
+  <Card title="CUSTOM (6)" icon="code">
+    Reserved for user-defined modules created through the JavaScript scripting API.
+  </Card>
+</CardGroup>
+
+## Lifecycle Hooks
+
+The engine calls these `virtual` methods at well-defined points. Override only the ones your module needs; the base implementations are all no-ops.
+
+### Core Hooks
+
+```cpp
+// Called every game tick while the module is enabled
+virtual void onTick(C_GameMode*);
+
+// Called once when the module is toggled on or off
+virtual void onEnable();
+virtual void onDisable();
+```
+
+<Info>
+`onTick` is only called when `isEnabled()` is `true`, unless the module overrides `callWhenDisabled()` to return `true` — a pattern used by always-active modules like HudModule.
+</Info>
+
+### Render Hooks
+
+```cpp
+// Called before and after the game's UI render pass each frame
+virtual void onPreRender(C_MinecraftUIRenderContext* renderCtx);
+virtual void onPostRender(C_MinecraftUIRenderContext* renderCtx);
+
+// Called during the 3-D level render pass (world-space drawing)
+virtual void onLevelRender();
+```
+
+### Input & Combat Hooks
+
+```cpp
+// Called when the game processes movement input
+virtual void onMove(C_MoveInputHandler*);
+
+// Called when the player attacks an entity
+virtual void onAttack(C_Entity*);
+
+// Called before a packet is sent to the server
+virtual void onSendPacket(C_Packet*);
+
+// Called on every keyboard event
+virtual void onKeyUpdate(int key, bool isDown);
+```
+
+### Config Hooks
+
+```cpp
+// Called by ConfigManager when loading or saving a profile
+virtual void onLoadConfig(void* conf);
+virtual void onSaveConfig(void* conf);
+```
+
+These two hooks receive a pointer to the active `nlohmann::json` object. Modules that have registered settings do not need to implement them manually — the setting system handles serialisation automatically.
+
+## Setting Types
+
+Horion supports seven typed settings via the `ValueType` enum:
+
+```cpp
+enum class ValueType {
+    FLOAT_T,   // float — sliders in the ClickGUI
+    DOUBLE_T,  // double
+    INT64_T,   // 64-bit integer
+    INT_T,     // 32-bit integer
+    BOOL_T,    // bool — toggle checkbox in the ClickGUI
+    TEXT_T,    // std::string
+    ENUM_T     // SettingEnum — dropdown in the ClickGUI
+};
+```
+
+Each setting is stored as a `SettingEntry` struct that holds the current value, a default, and optional min/max bounds. The ClickGUI reads `getSettings()` to render the appropriate control for each entry.
+
+## Registering Settings
+
+Protected registration helpers let a module declare its settings during construction. These helpers add a `SettingEntry` to the internal list and link it to a member variable so the value is always in sync.
+
+```cpp
+protected:
+    void registerFloatSetting(std::string name, float* floatPtr,
+                              float defaultValue, float minValue, float maxValue);
+
+    void registerIntSetting(std::string name, int* intPtr,
+                            int defaultValue, int minValue, int maxValue);
+
+    void registerBoolSetting(std::string name, bool* boolPtr,
+                             bool defaultValue);
+
+    void registerEnumSetting(std::string name, SettingEnum* enumPtr,
+                             int defaultValue);
+```
+
+A concrete module calls these from its constructor:
+
+```cpp
+// Hypothetical Speed module constructor
+Speed::Speed() : IModule(0, Category::MOVEMENT, "Increases movement speed") {
+    registerFloatSetting("Speed", &speed, 1.5f, 1.0f, 10.0f);
+    registerEnumSetting("Mode", &modeEnum, 0);
+    registerBoolSetting("OnGround", &onGround, false);
+}
+```
+
+### `SettingEnum` and `EnumEntry`
+
+Enum settings wrap a `SettingEnum` object that holds a list of named `EnumEntry` values and tracks the currently selected index. The ClickGUI renders these as a dropdown or cycle button.
+
+```cpp
+SettingEnum modeEnum;
+
+// Populated in the constructor:
+modeEnum.addEntry(EnumEntry("Vanilla", 0));
+modeEnum.addEntry(EnumEntry("Strafe",  1));
+modeEnum.addEntry(EnumEntry("Ncp",     2));
+```
+
+## Keybind System
+
+Every module stores a single `int keybind` (a Windows virtual-key code). The value is set at construction time and can be changed at runtime via:
+
+```cpp
+virtual void setKeybind(int key);
+virtual int  getKeybind();
+```
+
+When the user presses a key, `ModuleManager::onKeyUpdate` iterates the module list and calls `toggle()` on any module whose `keybind` matches. Keybinds are persisted in the config profile so they survive restarts.
+
+<Tip>
+Use the in-game `.bind <ModuleName> <key>` command or click a module's keybind slot in the ClickGUI to reassign a key without editing the config file directly.
+</Tip>
+
+## The `ModuleManager`
+
+`ModuleManager` is the singleton (`extern ModuleManager* moduleMgr`) that owns all module instances and fans out every engine event to the appropriate modules.
+
+```cpp
+class ModuleManager {
+public:
+    // Fan-out dispatchers called by engine hooks
+    void onTick(C_GameMode* gameMode);
+    void onAttack(C_Entity* attackedEnt);
+    void onKeyUpdate(int key, bool isDown);
+    void onPreRender(C_MinecraftUIRenderContext* renderCtx);
+    void onPostRender(C_MinecraftUIRenderContext* renderCtx);
+    void onLevelRender();
+    void onMove(C_MoveInputHandler* handler);
+    void onSendPacket(C_Packet*);
+
+    // Config persistence
+    void onLoadConfig(void* conf);
+    void onSaveConfig(void* conf);
+
+    // Lookup helpers
+    std::vector<std::shared_ptr<IModule>>* getModuleList();
+    int getModuleCount();
+    int getEnabledModuleCount();
+
+    template <typename TRet>
+    TRet* getModule();
+
+    std::optional<std::shared_ptr<IModule>> getModuleByName(const std::string name);
+};
+```
+
+### `getModule<T>()` — Preferred Lookup
+
+The template overload performs a `dynamic_cast` across the module list and is the recommended way to get a typed pointer to a specific module:
+
+```cpp
+// Getting a module by type
+Fly* flyMod = moduleMgr->getModule<Fly>();
+if (flyMod && flyMod->isEnabled()) {
+    // Fly is active
+}
+```
+
+<Warning>
+Always null-check the result. `getModule<T>()` returns `nullptr` if `ModuleManager` has not yet been initialised (which can happen in hooks that fire before `initModules()` completes).
+</Warning>
+
+### `getModuleByName()` — Name-Based Lookup
+
+Use this only when you do not have the concrete type available at compile time (e.g. from a script or a string-driven command):
+
+```cpp
+auto result = moduleMgr->getModuleByName("killaura");
+if (result.has_value()) {
+    result.value()->setEnabled(true);
+}
+```
+
+The comparison is case-insensitive. Prefer `getModule<T>()` in all other situations.
+
+### Thread Safety
+
+`ModuleManager` protects its module list with a `std::shared_mutex`. Use `lockModuleList()` for shared (read-only) access and `lockModuleListExclusive()` when mutating the list:
+
+```cpp
+auto lock = moduleMgr->lockModuleList();
+for (auto& mod : *moduleMgr->getModuleList()) {
+    // safe to iterate
+}
+```

@@ -1,0 +1,293 @@
+---
+title: "Horion Scripting Examples: Custom Modules and Overlays"
+sidebarTitle: "Examples"
+description: "Practical Horion JavaScript scripting examples: register custom modules, build an ESP overlay, query inventory, control the player, and execute commands."
+---
+
+The examples on this page demonstrate real, working scripts built on the Horion scripting API. Each example is a complete `start.js` file you can drop into its own folder and load immediately. All examples use the actual global names (`Game`, `Horion`, `Vec3`, `Vec2`), the correct callback event strings (`onTick`, `onRender`, `onRender2d`, etc.), and the real method signatures from the source code.
+
+<Tip>
+Place your script files in a dedicated folder such as `C:\Users\<you>\AppData\Roaming\Horion\scripts\my-module\`, then load it with `.script load C:\Users\<you>\AppData\Roaming\Horion\scripts\my-module`. The folder **must** contain a file named exactly `start.js`. To reload after editing, unload it first with `.script unload <path>` and then load it again — there is no hot-reload; a fresh load always reads the file from disk.
+</Tip>
+
+<Warning>
+All callbacks (`onTick`, `onRender`, `onRender2d`, etc.) run on Horion's internal thread. Do not perform blocking I/O, long loops, or any operation that could stall the thread inside a callback. There is no native `setTimeout` or `setInterval` — use `onTick` for periodic work.
+</Warning>
+
+---
+
+## Example 1: Log player position every tick
+
+The simplest possible script: register a module and print the player's world position to the console on every game tick.
+
+```javascript
+// start.js
+var mm = Horion.getModuleManager();
+var posLogger = mm.registerModule("PositionLogger");
+
+posLogger.registerCallback("onEnable", function() {
+    log("[PositionLogger] Enabled");
+});
+
+posLogger.registerCallback("onDisable", function() {
+    log("[PositionLogger] Disabled");
+});
+
+posLogger.registerCallback("onTick", function() {
+    var player = Game.getLocalPlayer();
+    if (!player.isValid()) return;
+
+    var pos = player.getPosition();
+    log("Pos: " + pos.x.toFixed(2) + ", " + pos.y.toFixed(2) + ", " + pos.z.toFixed(2));
+});
+
+log("PositionLogger script loaded!");
+```
+
+Enable the **PositionLogger** module from the ClickGUI and watch position values stream in the console.
+
+---
+
+## Example 2: Custom Entity ESP overlay
+
+Draws a red line from the render camera origin to every targetable entity. The lines are rendered in the 3D scene frame so they follow entity movement smoothly.
+
+```javascript
+// start.js
+var mm = Horion.getModuleManager();
+var draw = Horion.getDrawUtils();
+
+var esp = mm.registerModule("ScriptESP");
+
+esp.registerCallback("onRender", function() {
+    var level = Game.getLevel();
+    if (!level.isValid()) return;
+
+    var entities = level.getAllTargetEntities();
+    if (entities.length === 0) return;
+
+    var origin = draw.getOrigin();
+
+    draw.setColor(1, 0, 0, 1); // solid red
+
+    for (var i = 0; i < entities.length; i++) {
+        var ent = entities[i];
+        if (!ent.isValid()) continue;
+
+        var entPos = ent.getInterpolatedPosition();
+        draw.drawLine3d(origin, entPos);
+    }
+});
+
+log("ScriptESP loaded");
+```
+
+<Note>
+`getInterpolatedPosition()` uses the render frame's lerp time to smooth movement between ticks, making lines far less jittery than `getPosition()` alone.
+</Note>
+
+---
+
+## Example 3: 2D HUD overlay with player info
+
+Draws a small information panel in the top-left corner of the screen every 2D render frame, showing the player's position, velocity magnitude, and ground state.
+
+```javascript
+// start.js
+var mm = Horion.getModuleManager();
+var draw = Horion.getDrawUtils();
+
+var hud = mm.registerModule("ScriptHUD");
+
+hud.registerCallback("onRender2d", function() {
+    var player = Game.getLocalPlayer();
+    if (!player.isValid()) return;
+
+    var pos  = player.getPosition();
+    var vel  = player.getVelocity();
+    var speed = Math.sqrt(vel.x * vel.x + vel.z * vel.z);
+    var onGround = player.isOnGround();
+
+    var lineH = draw.getTextLineHeight(1);
+    var x = 10;
+    var y = 50;
+
+    // Background panel
+    draw.setColor(0, 0, 0, 0.5);
+    draw.fillRectangle2d(new Vec2(x - 2, y - 2), new Vec2(x + 160, y + lineH * 3 + 4));
+
+    // Text lines
+    draw.setColor(1, 1, 1, 1);
+    draw.drawText2d(
+        "XYZ: " + pos.x.toFixed(1) + " " + pos.y.toFixed(1) + " " + pos.z.toFixed(1),
+        new Vec2(x, y)
+    );
+    draw.drawText2d("Speed: " + speed.toFixed(3), new Vec2(x, y + lineH));
+    draw.drawText2d("Ground: " + onGround,        new Vec2(x, y + lineH * 2));
+});
+
+log("ScriptHUD loaded");
+```
+
+---
+
+## Example 4: Execute commands from a script
+
+Use `CommandManager.executeCommand()` to trigger any Horion command programmatically. This example registers a module that disables all modules when enabled.
+
+```javascript
+// start.js
+var mm = Horion.getModuleManager();
+var cm = Horion.getCommandManager();
+
+var panicMod = mm.registerModule("ScriptPanic");
+
+panicMod.registerCallback("onEnable", function() {
+    log("[ScriptPanic] Running .panic now");
+    cm.executeCommand(".panic");
+});
+
+log("ScriptPanic loaded — enable the module to trigger .panic");
+```
+
+---
+
+## Example 5: Interact with the inventory
+
+Inspect every inventory slot and log non-air items, then switch to hotbar slot 0.
+
+```javascript
+// start.js
+var mm = Horion.getModuleManager();
+
+var invMod = mm.registerModule("InvLogger");
+
+invMod.registerCallback("onEnable", function() {
+    var player = Game.getLocalPlayer();
+    if (!player.isValid()) {
+        log("Player not valid");
+        return;
+    }
+
+    var inv = player.getInventory();
+
+    // Log held item
+    var held = inv.getHeld();
+    log("Held: " + held.name + " x" + held.amount + " (id=" + held.id + ")");
+
+    // Log armor
+    var armor = inv.getArmor();
+    for (var i = 0; i < armor.length; i++) {
+        log("Armor[" + i + "]: " + armor[i].name);
+    }
+
+    // Log all non-air items
+    var items = inv.getItems();
+    for (var j = 0; j < items.length; j++) {
+        if (items[j].name !== "air") {
+            log("Slot " + j + ": " + items[j].name + " x" + items[j].amount);
+        }
+    }
+
+    // Check if full
+    if (inv.isFull) {
+        log("Inventory is full!");
+    }
+
+    // Select first hotbar slot
+    inv.setSelected(0);
+});
+
+log("InvLogger loaded");
+```
+
+<Note>
+`isFull` is a **property**, not a method — access it as `inv.isFull`, not `inv.isFull()`.
+</Note>
+
+---
+
+## Example 6: Control an existing built-in module
+
+Look up Horion's built-in **Fly** module and enable it from script. Useful for building automation or macro scripts that conditionally toggle modules.
+
+```javascript
+// start.js
+var mm = Horion.getModuleManager();
+var trigger = mm.registerModule("FlyTrigger");
+
+trigger.registerCallback("onEnable", function() {
+    var fly = mm.getModuleByName("Fly");
+    if (!fly) {
+        log("Fly module not found");
+        return;
+    }
+
+    if (!fly.isEnabled()) {
+        fly.setEnabled(true);
+        log("Fly enabled by script");
+    } else {
+        log("Fly was already enabled");
+    }
+});
+
+trigger.registerCallback("onDisable", function() {
+    var fly = mm.getModuleByName("Fly");
+    if (fly && fly.isEnabled()) {
+        fly.setEnabled(false);
+        log("Fly disabled by script");
+    }
+});
+
+log("FlyTrigger loaded");
+```
+
+---
+
+## Example 7: Draw a bounding box around entities
+
+Draws a simple line-strip box around each targetable entity using `drawLinestrip3d`.
+
+```javascript
+// start.js
+var mm = Horion.getModuleManager();
+var draw = Horion.getDrawUtils();
+
+var bbox = mm.registerModule("ScriptBBox");
+
+function makeBox(pos, w, h) {
+    var hw = w / 2;
+    return [
+        new Vec3(pos.x - hw, pos.y,     pos.z - hw),
+        new Vec3(pos.x + hw, pos.y,     pos.z - hw),
+        new Vec3(pos.x + hw, pos.y,     pos.z + hw),
+        new Vec3(pos.x - hw, pos.y,     pos.z + hw),
+        new Vec3(pos.x - hw, pos.y,     pos.z - hw),
+        new Vec3(pos.x - hw, pos.y + h, pos.z - hw),
+        new Vec3(pos.x + hw, pos.y + h, pos.z - hw),
+        new Vec3(pos.x + hw, pos.y + h, pos.z + hw),
+        new Vec3(pos.x - hw, pos.y + h, pos.z + hw),
+        new Vec3(pos.x - hw, pos.y + h, pos.z - hw)
+    ];
+}
+
+bbox.registerCallback("onRender", function() {
+    var level = Game.getLevel();
+    if (!level.isValid()) return;
+
+    var targets = level.getAllTargetEntities();
+    draw.setColor(0, 1, 0, 1); // green
+
+    for (var i = 0; i < targets.length; i++) {
+        var ent = targets[i];
+        if (!ent.isValid()) continue;
+
+        var pos  = ent.getInterpolatedPosition();
+        var size = ent.getSize();
+        var pts  = makeBox(pos, size.x, size.y);
+        draw.drawLinestrip3d(pts);
+    }
+});
+
+log("ScriptBBox loaded");
+```

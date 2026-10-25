@@ -1,0 +1,151 @@
+---
+title: "Save and Load Module Settings with Horion Configs"
+sidebarTitle: "Config Management"
+description: "Discover how Horion stores JSON config profiles in %APPDATA%, which data each profile captures, and how to switch between named profiles in-game."
+---
+
+Horion's config system lets you snapshot the entire client state — every module's enabled flag, every setting value, every keybind, and the command prefix — into a named JSON file. Switching profiles takes a single in-game command, so you can keep separate configurations for different servers, game-modes, or play-styles without manually re-tuning anything.
+
+## Storage Location
+
+Config files are stored in the Windows **Roaming AppData** folder for Minecraft: Bedrock Edition. `ConfigManager` resolves this path at startup using the WinRT `Windows.Storage.ApplicationData` API, which ensures the correct per-user path regardless of where the game is installed.
+
+```
+%APPDATA%\Local\Packages\Microsoft.MinecraftUWP_<id>\RoamingState\<name>.h
+```
+
+<Info>
+The `.h` file extension is intentional — it is just the container format Horion uses internally. The files are standard JSON and can be opened in any text editor.
+</Info>
+
+Each profile is a single file named `<profileName>.h`. The default profile is called `default`, so the first file created is `default.h`.
+
+## The `ConfigManager` Class
+
+`ConfigManager` is the singleton (`extern ConfigManager* configMgr`) responsible for all profile I/O. Its public interface is small and focused:
+
+```cpp
+class ConfigManager {
+public:
+    std::string currentConfig = "default";  // Active profile name
+
+    void loadConfig(std::string name, bool create);
+    void saveConfig();
+    void init();
+};
+```
+
+| Method | Behaviour |
+|---|---|
+| `init()` | Called once at Horion startup. Loads (or creates) the `default` profile. |
+| `loadConfig(name, create)` | Saves the current profile first, then loads `name`. If the file does not exist and `create` is `true`, a new file is created and saved immediately. |
+| `saveConfig()` | Serialises the current state to `currentConfig + ".h"` in the roaming folder. |
+
+### What Gets Saved
+
+`saveConfig` delegates to `ModuleManager::onSaveConfig`, which iterates every module and calls its `onSaveConfig` hook. Modules that have registered settings via `registerFloatSetting`, `registerBoolSetting`, etc., serialise their values automatically. The config object also stores the current command prefix:
+
+```cpp
+// Inside ConfigManager::saveConfig()
+moduleMgr->onSaveConfig(&currentConfigObj);
+
+std::string prefix;
+prefix.push_back(cmdMgr->prefix);
+currentConfigObj["prefix"] = prefix;
+```
+
+A typical profile therefore captures:
+
+- Enabled/disabled state for every module
+- All registered setting values (floats, ints, bools, enums, strings)
+- Per-module keybinds
+- The command prefix character
+- The friend list (persisted through the module that manages it)
+
+## Serialisation Format
+
+Horion uses the [nlohmann/json](https://github.com/nlohmann/json) library. Each module writes its own keys into the shared JSON object, so the file is a flat-ish object where top-level keys correspond to module names. A short excerpt might look like:
+
+```json
+{
+    "from": "Horion",
+    "prefix": ".",
+    "Fly": {
+        "enabled": false,
+        "keybind": 70,
+        "Speed": 1.5
+    },
+    "KillAura": {
+        "enabled": true,
+        "keybind": 82,
+        "Range": 4.2,
+        "Mode": 1
+    }
+}
+```
+
+<Note>
+The `"from": "Horion"` key is written on every load as a simple file-origin marker. Horion does not currently use it for validation, but it distinguishes Horion configs from other JSON files if you browse the folder manually.
+</Note>
+
+## In-Game Usage
+
+The `ConfigCommand` exposes all profile operations through the chat interface:
+
+```
+.config save              — save the current profile to disk
+.config load <name>       — switch to (or create) a named profile
+.config list              — list all saved profiles
+```
+
+<Tabs>
+  <Tab title="Save">
+    ```
+    .config save
+    ```
+    Flushes the current in-memory state to the active profile file. Horion also auto-saves when you switch profiles or when the DLL unloads gracefully.
+  </Tab>
+  <Tab title="Load">
+    ```
+    .config load pvp
+    ```
+    Saves the current profile first, then reads `pvp.h` from the roaming folder and applies it. If `pvp.h` does not exist yet, Horion creates it (equivalent to passing `create = true`).
+  </Tab>
+  <Tab title="List">
+    ```
+    .config list
+    ```
+    Enumerates profile files in the roaming folder and prints their names to client chat so you can see what profiles are available before loading one.
+  </Tab>
+</Tabs>
+
+## Switching Profiles Without Losing Changes
+
+When `loadConfig` is called with a different profile name, it automatically saves the current profile before applying the new one:
+
+```cpp
+// Inside ConfigManager::loadConfig()
+if (name != currentConfig)
+    saveConfig();  // Save old config first
+currentConfig = name;
+// ... load new config ...
+```
+
+This means switching profiles is always non-destructive — you will not lose unsaved changes to your current profile.
+
+<Warning>
+If Minecraft crashes hard (process kill, BSOD, etc.) before a graceful unload, the in-memory state may not have been flushed. Run `.config save` after making important changes.
+</Warning>
+
+## Best Practices
+
+<Tip>
+Back up your roaming folder before updating Horion. A major update may change setting names or add new modules, which can cause old config keys to be ignored on load — your settings will revert to defaults for affected modules.
+</Tip>
+
+A sensible workflow:
+
+1. **Create named profiles** for different scenarios — e.g., `.config load crystal` for Crystal PvP, `.config load build` for creative building.
+2. **Save explicitly** with `.config save` after tuning a profile to your liking.
+3. **Copy the roaming folder** to a backup location before installing a Horion update.
+4. After updating, load your backup profile and verify settings; recreate any that reverted to defaults.

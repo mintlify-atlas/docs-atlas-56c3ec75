@@ -1,0 +1,130 @@
+---
+title: "Build Horion from Source with Visual Studio"
+sidebarTitle: "Build from Source"
+description: "Clone the Horion repository, restore NuGet packages, and compile Horion.sln with Visual Studio to produce a custom Horion.dll ready for injection."
+---
+
+Building Horion from source gives you full control over the codebase — you can modify existing modules, add new ones, experiment with the scripting API, or contribute fixes back to the project via pull request. This page covers every prerequisite, walks through the complete build process inside Visual Studio, and shows the equivalent command-line MSBuild invocation used by Horion's own CI pipeline. The output of a successful build is `Horion.dll`, which you inject into Minecraft: Bedrock Edition exactly like the pre-built release.
+
+## Prerequisites
+
+You need the following tools installed on a **Windows 10 or Windows 11** machine before you begin:
+
+<CardGroup cols={2}>
+  <Card title="Visual Studio 2019 or later" icon="microsoft">
+    Install the **Desktop development with C++** workload. This pulls in the MSVC compiler, linker, and the Windows SDK. Visual Studio 2022 works equally well.
+  </Card>
+  <Card title="Windows 10 SDK" icon="windows">
+    The project targets `WindowsTargetPlatformVersion 10.0`. Ensure at least one Windows 10 or 11 SDK is installed via the Visual Studio Installer.
+  </Card>
+  <Card title="NuGet Package Manager" icon="box">
+    Included with Visual Studio's C++ workload. Required to restore `directxtk_desktop_2017` and `Microsoft.XAudio2.Redist` before the first build.
+  </Card>
+  <Card title="Git" icon="code-branch">
+    Needed to clone the repository. Download from [git-scm.com](https://git-scm.com) if not already installed.
+  </Card>
+</CardGroup>
+
+<Note>
+  **Windows is the only supported build platform.** Horion depends on Win32 APIs, DirectX 11 (`d3dx11`), and the Chakra JavaScript runtime — none of which are available on macOS or Linux. The `.vcxproj` targets MSVC toolset `v142` (VS 2019+).
+</Note>
+
+## NuGet Dependencies
+
+Horion's `packages.config` declares two NuGet packages that are restored automatically during the build:
+
+| Package | Version | Purpose |
+| ------- | ------- | ------- |
+| `directxtk_desktop_2017` | 2020.2.24.4 | DirectX Tool Kit — sprite batching, fonts, and 2D rendering helpers used by the ClickGUI |
+| `Microsoft.XAudio2.Redist` | 1.2.0 | XAudio2 redistributable for audio support on older Windows 10 builds |
+
+These are fetched from NuGet.org and do not require any manual download.
+
+## Build Process
+
+<Steps>
+  <Step title="Clone the Repository">
+    Open a terminal (Command Prompt, PowerShell, or Git Bash) and run:
+
+    ```bash
+    git clone https://github.com/horionclient/Horion.git
+    cd Horion
+    ```
+
+    This creates a local copy of the full source tree, including all module source files, the SDK headers, MinHook, Chakra headers, and the DirectX 11 includes.
+  </Step>
+
+  <Step title="Open the Solution in Visual Studio">
+    Launch Visual Studio and use **File → Open → Project/Solution**, then navigate to the cloned folder and select `Horion.sln`.
+
+    Alternatively, double-click `Horion.sln` in File Explorer — it will open directly in Visual Studio.
+
+    The solution contains a single project (`Horion`) configured to produce a **DynamicLibrary** (`.dll`).
+  </Step>
+
+  <Step title="Restore NuGet Packages">
+    In the Visual Studio menu bar, go to **Tools → NuGet Package Manager → Package Manager Console** and run:
+
+    ```powershell
+    nuget restore
+    ```
+
+    Or right-click the **Horion** project in Solution Explorer and choose **Restore NuGet Packages**. This downloads `directxtk_desktop_2017` and `Microsoft.XAudio2.Redist` into the `packages/` directory.
+
+    <Note>
+      If you skip this step the build will fail immediately with errors about missing DirectX Toolkit headers and `.targets` imports.
+    </Note>
+  </Step>
+
+  <Step title="Select the Release Configuration">
+    In the Visual Studio toolbar, open the **Solution Configurations** dropdown and select **Release**. Choose the appropriate platform for your system from the **Solution Platforms** dropdown — **x64** is recommended and matches the 64-bit Minecraft: Bedrock Edition process.
+
+    <Info>
+      The solution also exposes a `BetaConf` configuration, which adds the `_BETA` preprocessor definition and enables beta-only code paths. Use `Release` for a standard production build.
+    </Info>
+  </Step>
+
+  <Step title="Build the Solution">
+    Press **Ctrl+Shift+B** or go to **Build → Build Solution**. Visual Studio will compile all source files and link `Horion.dll`.
+
+    A successful build produces the DLL at a path similar to:
+
+    ```
+    Horion\x64\Release\Horion.dll
+    ```
+
+    Check the **Output** pane at the bottom of Visual Studio to confirm `Build succeeded` with `0 Error(s)`.
+  </Step>
+
+  <Step title="Inject Your Custom Build">
+    Use any standard DLL injector to load your freshly built `Horion.dll` into a running `Minecraft.Windows.exe` process — the same way you would inject the pre-built release. See the [Installation guide](/installation) for the full injection walkthrough.
+  </Step>
+</Steps>
+
+## Building from the Command Line (MSBuild)
+
+Horion's CI pipeline (`.github/workflows/msbuild.yml`) builds the solution with a single MSBuild command. You can reproduce this locally from a **Developer Command Prompt for VS** or any terminal where `msbuild` is on the `PATH`:
+
+```bash
+# Restore NuGet packages first
+nuget restore Horion.sln
+
+# Build in Release configuration (parallel, all CPU cores)
+msbuild /m /p:Configuration=Release Horion.sln
+```
+
+The `/m` flag enables parallel compilation across all available CPU cores. The output DLL location is the same as when building through the IDE: `x64\Release\Horion.dll`.
+
+<Tip>
+  To target a specific platform explicitly, add `/p:Platform=x64` to the MSBuild command:
+
+  ```bash
+  msbuild /m /p:Configuration=Release /p:Platform=x64 Horion.sln
+  ```
+</Tip>
+
+## Contributing Your Changes
+
+If you have fixed a bug or added a new module, the project welcomes pull requests. Fork the repository on GitHub, commit your changes to a feature branch, and open a PR against `master`. The CI workflow will automatically build your branch on `windows-latest` to verify it compiles cleanly.
+
+For questions about the code or the contribution process, join the [official Discord server](https://horion.download/discord).

@@ -1,0 +1,323 @@
+---
+title: "Horion Contribution Guidelines and Code Style"
+sidebarTitle: "Guidelines"
+description: "Submit pull requests, write new modules and commands, follow clang-format code style, and report bugs or feature requests for the Horion mod."
+---
+
+Horion is an open-source project and welcomes contributions from the community. Whether you are fixing a bug, adding a new module, or improving an existing command, this page explains the workflow, coding conventions, and structural patterns you need to follow so that your pull request can be reviewed and merged smoothly.
+
+## Contribution Workflow
+
+The project uses a standard GitHub fork-and-pull-request model, as described in the README:
+
+> *To contribute, simply fork the repository, edit the code, and submit a pull request. We will then check your pull request and accept/deny it.*
+
+<Steps>
+  <Step title="Fork and clone">
+    Fork [github.com/horionclient/Horion](https://github.com/horionclient/Horion) to your GitHub account, then clone your fork locally:
+
+    ```bash
+    git clone https://github.com/<your-username>/Horion.git
+    cd Horion
+    ```
+  </Step>
+
+  <Step title="Create a feature branch">
+    Work on a dedicated branch rather than committing directly to `master`:
+
+    ```bash
+    git checkout -b feature/my-new-module
+    ```
+  </Step>
+
+  <Step title="Make your changes">
+    Write code, following the style and structural conventions described on this page. Run `clang-format` before you commit (see [Code Style](#code-style) below).
+  </Step>
+
+  <Step title="Push and open a pull request">
+    Push your branch to your fork and open a pull request against the upstream `master` branch. Describe what your change does and why. The team reviews all PRs and will accept or deny them.
+
+    If you are not sure where to start, the [good first issues list](https://github.com/horionclient/Horion/contribute) collects well-scoped tasks that are suitable for new contributors.
+  </Step>
+</Steps>
+
+<Note>
+  Every pull request automatically triggers the MSBuild CI pipeline defined in
+  `.github/workflows/msbuild.yml`. Your PR must compile cleanly in the
+  `Release|x64` configuration before it will be reviewed.
+</Note>
+
+## Code Style
+
+The project enforces a unified C++ style via `.clang-format`. The configuration is based on the Google style guide with 4-space tab indentation and no column limit:
+
+```yaml
+BasedOnStyle: Google
+UseTab: ForContinuationAndIndentation
+IndentWidth: 4
+TabWidth: 4
+IndentCaseLabels: false
+ColumnLimit: 0
+BreakBeforeBraces: Attach
+AccessModifierOffset: -4
+Language: Cpp
+```
+
+**Always run `clang-format` before submitting a PR.** Format every file you touched:
+
+```bash
+clang-format -i Horion/Module/Modules/MyModule.cpp
+clang-format -i Horion/Module/Modules/MyModule.h
+```
+
+Pull requests with inconsistent formatting will be asked to reformat before merge.
+
+## Writing a New Module
+
+Modules are the core feature units of Horion — each toggle in the ClickGui corresponds to one `IModule` subclass. The source lives under `Horion/Module/Modules/`.
+
+### File structure
+
+Create two files:
+
+```
+Horion/Module/Modules/MyModule.h
+Horion/Module/Modules/MyModule.cpp
+```
+
+### `IModule` base class
+
+Every module inherits from `IModule` (defined in `Horion/Module/Modules/Module.h`). The constructor signature is:
+
+```cpp
+IModule(int key, Category c, const char* tooltip);
+```
+
+`Category` is an enum with the following values:
+
+| Value | Meaning |
+|---|---|
+| `Category::COMBAT` | Combat-related features |
+| `Category::VISUAL` | Render / ESP features |
+| `Category::MOVEMENT` | Movement modifications |
+| `Category::PLAYER` | Player state changes |
+| `Category::WORLD` | World interaction |
+| `Category::MISC` | Miscellaneous |
+| `Category::CUSTOM` | User-defined / scripted |
+
+### Settings registration
+
+Register configurable settings in the constructor using the protected helper methods from `IModule`:
+
+| Method | Type |
+|---|---|
+| `registerFloatSetting(name, ptr, default, min, max)` | `float` |
+| `registerIntSetting(name, ptr, default, min, max)` | `int` |
+| `registerBoolSetting(name, ptr, default)` | `bool` |
+| `registerEnumSetting(name, enumPtr, default)` | `SettingEnum` |
+
+### Lifecycle hooks
+
+Override only the hooks your module needs. The full set of virtual methods declared in `IModule`:
+
+```cpp
+virtual void onTick(C_GameMode* gm);
+virtual void onEnable();
+virtual void onDisable();
+virtual void onAttack(C_Entity* ent);
+virtual void onPreRender(C_MinecraftUIRenderContext* renderCtx);
+virtual void onPostRender(C_MinecraftUIRenderContext* renderCtx);
+virtual void onLevelRender();
+virtual void onMove(C_MoveInputHandler* handler);
+virtual void onSendPacket(C_Packet* pkt);
+virtual void onKeyUpdate(int key, bool isDown);
+virtual void onLoadConfig(void* conf);
+virtual void onSaveConfig(void* conf);
+```
+
+### Module skeleton
+
+```cpp
+// Horion/Module/Modules/MyModule.h
+#pragma once
+#include "Module.h"
+
+class MyModule : public IModule {
+private:
+    float myFloat = 1.0f;
+    bool  myBool  = false;
+
+public:
+    MyModule();
+    ~MyModule();
+    virtual const char* getModuleName() override;
+    virtual void onTick(C_GameMode* gm) override;
+    virtual void onEnable() override;
+    virtual void onDisable() override;
+};
+```
+
+```cpp
+// Horion/Module/Modules/MyModule.cpp
+#include "MyModule.h"
+
+MyModule::MyModule() : IModule(0, Category::MISC, "My custom module") {
+    registerFloatSetting("Speed", &myFloat, 1.0f, 0.1f, 10.0f);
+    registerBoolSetting("Silent", &myBool, false);
+}
+
+MyModule::~MyModule() {}
+
+const char* MyModule::getModuleName() {
+    return "MyModule";
+}
+
+void MyModule::onEnable() {
+    // Called when the user toggles the module on
+}
+
+void MyModule::onDisable() {
+    // Called when the user toggles the module off
+}
+
+void MyModule::onTick(C_GameMode* gm) {
+    if (!g_Data.isInGame()) return;
+    // Your per-tick logic here
+}
+```
+
+### Registering the module
+
+1. Add an `#include` for your header to `Horion/Module/ModuleManager.h` alongside the existing module includes.
+2. Instantiate the module inside `ModuleManager::initModules()` in `Horion/Module/ModuleManager.cpp`:
+
+```cpp
+this->moduleList.push_back(std::shared_ptr<IModule>(new MyModule()));
+```
+
+The module manager stores all modules as `std::shared_ptr<IModule>` in a `std::vector`. Retrieval by type is done with the templated `getModule<T>()` helper:
+
+```cpp
+MyModule* mod = moduleMgr->getModule<MyModule>();
+```
+
+## Writing a New Command
+
+Commands let users interact with Horion through the in-game chat prefix (default `.`). Command sources live in `Horion/Command/Commands/`.
+
+### File structure
+
+Create two files:
+
+```
+Horion/Command/Commands/MyCommand.h
+Horion/Command/Commands/MyCommand.cpp
+```
+
+### `IMCCommand` base class
+
+Every command inherits from `IMCCommand` (defined in `Horion/Command/Commands/ICommand.h`). The constructor takes three strings — the command name, a description, and a usage hint:
+
+```cpp
+IMCCommand(const char* command, const char* description, const char* usage);
+```
+
+The one pure-virtual method you must implement is:
+
+```cpp
+virtual bool execute(std::vector<std::string>* args) = 0;
+```
+
+Return `true` on success. Return `false` (or throw) to have the command manager print the usage string automatically.
+
+### Command skeleton
+
+```cpp
+// Horion/Command/Commands/MyCommand.h
+#pragma once
+#include "ICommand.h"
+
+class MyCommand : public IMCCommand {
+public:
+    MyCommand();
+    virtual bool execute(std::vector<std::string>* args) override;
+};
+```
+
+```cpp
+// Horion/Command/Commands/MyCommand.cpp
+#include "MyCommand.h"
+
+MyCommand::MyCommand()
+    : IMCCommand("mycommand", "Does something useful", "<arg1>") {
+    registerAlias("mc"); // optional short alias
+}
+
+bool MyCommand::execute(std::vector<std::string>* args) {
+    ASSERT_T(args->size() >= 2); // returns false if condition fails
+    // args->at(0) is the command name itself
+    std::string param = args->at(1);
+    clientMessageF("You passed: %s", param.c_str());
+    return true;
+}
+```
+
+### Registering the command
+
+1. Add an `#include` for your header to `Horion/Command/CommandMgr.h`.
+2. Push a new instance inside `CommandMgr::initCommands()` in `Horion/Command/CommandMgr.cpp`:
+
+```cpp
+commandList.push_back(new MyCommand());
+```
+
+<Note>
+  Commands wrapped in `#ifdef _DEBUG` (like `TestCommand`) are only compiled
+  into Debug builds. Use the same guard if your command is intended for
+  development use only.
+</Note>
+
+## Reporting Bugs
+
+Use the [GitHub bug report template](https://github.com/horionclient/Horion/issues/new?template=bug_report.md) when you encounter a problem. Fill in every section:
+
+<CardGroup cols={2}>
+  <Card title="Describe the bug" icon="bug">
+    A clear, concise description of what is going wrong.
+  </Card>
+  <Card title="Steps to reproduce" icon="list-ol">
+    Numbered steps that reliably trigger the issue (e.g., "1. Enable Killaura. 2. Join a server. 3. See crash.").
+  </Card>
+  <Card title="Expected vs actual behavior" icon="arrows-left-right">
+    What you expected to happen and what actually happened instead.
+  </Card>
+  <Card title="Environment details" icon="desktop">
+    Your Windows version, MCBE version, and any relevant screenshots or logs.
+  </Card>
+</CardGroup>
+
+Issues submitted without reproduction steps or version information may be closed without action.
+
+## Requesting Features
+
+Use the [GitHub feature request template](https://github.com/horionclient/Horion/issues/new?template=feature_request.md) for ideas. Include:
+
+- **Problem context** — what frustration or limitation motivates the request
+- **Desired solution** — a concrete description of what you want added
+- **Alternatives considered** — other approaches you thought about
+- **Additional context** — screenshots, mockups, or related issues
+
+<Tip>
+  Check the [existing issues](https://github.com/horionclient/Horion/issues)
+  before filing a new one — your idea may already be tracked or in progress.
+</Tip>
+
+## License
+
+Horion is licensed under the **Creative Commons Attribution-NonCommercial 4.0 International (CC BY-NC 4.0)** license. When contributing you agree that your code is distributed under the same terms:
+
+- ✅ You may fork, modify, and redistribute the code.
+- ✅ You must give appropriate credit to the original authors.
+- ❌ You may **not** sell the code or any derivative of it.
+
+Note that not all files in the repository are covered by this license — third-party libraries such as Chakra and DirectX headers retain their own copyright notices. See [creativecommons.org/licenses/by-nc/4.0](https://creativecommons.org/licenses/by-nc/4.0/) for the full license text.

@@ -1,0 +1,180 @@
+---
+title: "Horion In-Game Command System Explained"
+sidebarTitle: "Command System"
+description: "Understand how the IMCCommand base class, configurable prefix, alias support, and argument parsing power every Horion chat command."
+---
+
+Horion intercepts Minecraft's outgoing chat messages and checks them against a list of registered commands before they reach the server. Any message that begins with the current prefix character — a period (`.`) by default — is consumed entirely by Horion and never sent to the server. This gives you a private command interface you can use to toggle modules, manage configs, adjust settings, and more, all without broadcasting anything to other players.
+
+## The Command Prefix
+
+The prefix is stored as a `char` on the `CommandMgr` singleton:
+
+```cpp
+class CommandMgr {
+public:
+    char prefix = '.';
+    // ...
+};
+```
+
+You can change it at runtime with the built-in SetPrefix command:
+
+```
+.setprefix <character>
+```
+
+The new prefix is immediately active and is serialised into the current config profile so it persists across sessions.
+
+<Warning>
+The prefix must be a single printable character. Choosing a character that appears at the start of normal chat messages (such as `/`) will prevent those messages from reaching the server.
+</Warning>
+
+## The `IMCCommand` Base Class
+
+Every command in Horion inherits from `IMCCommand`, defined in `Command/Commands/ICommand.h`. The class carries three identity strings and an alias list:
+
+```cpp
+class IMCCommand {
+private:
+    const char* _command;      // Primary command name (lower-case, no prefix)
+    const char* _description;  // One-line description shown by .help
+    const char* _usage;        // Usage string shown by .help <command>
+    std::vector<std::string> aliasList;
+
+protected:
+    void registerAlias(const char* str);
+    void clientMessageF(const char* fmt, ...);
+
+    // Assertion helpers for argument parsing
+    inline void  assertTrue(bool condition);
+    inline float assertFloat(std::string string);
+    inline int   assertInt(std::string string);
+
+public:
+    IMCCommand(const char* command, const char* description, const char* usage);
+
+    virtual const char*              getCommand();
+    virtual std::vector<std::string>* getAliasList();
+    virtual const char*              getDescription();
+    virtual const char*              getUsage(const char* alias);
+    virtual bool                     execute(std::vector<std::string>* args) = 0;
+};
+```
+
+The constructor takes all three identity strings at once, so a minimal command needs only a constructor and an `execute` override.
+
+## Virtual Methods
+
+<CardGroup cols={2}>
+  <Card title="execute(args)" icon="play">
+    The only pure-virtual method. Called with the tokenised argument vector when the command matches. Return `true` on success, `false` to print the usage string automatically.
+  </Card>
+  <Card title="getCommand()" icon="terminal">
+    Returns the primary command name. `CommandMgr` matches this (case-insensitively) against the first token of the chat input.
+  </Card>
+  <Card title="getDescription()" icon="circle-info">
+    Short description displayed by `.help` when listing all commands.
+  </Card>
+  <Card title="getUsage(alias)" icon="book">
+    Usage string displayed when `execute` returns `false` or when the user runs `.help <command>`. The `alias` parameter lets you return alias-specific syntax strings.
+  </Card>
+</CardGroup>
+
+## How Arguments Are Parsed
+
+`CommandMgr::execute` splits the raw chat string on spaces to produce a `std::vector<std::string>`. The prefix character is stripped first, so element `[0]` is always the command name and elements `[1]` onward are the arguments.
+
+```cpp
+// Input:  ".config load myProfile"
+// args[0] = "config"
+// args[1] = "load"
+// args[2] = "myProfile"
+```
+
+The base class provides three small helpers to convert argument strings safely inside `execute`:
+
+```cpp
+float f  = assertFloat((*args)[1]);   // throws on parse failure
+int   i  = assertInt((*args)[1]);     // throws on parse failure
+assertTrue(args->size() >= 3);        // throws if condition is false
+```
+
+All three throw `std::exception` on failure. `CommandMgr` catches that exception and prints the command's usage string, so you don't need explicit try/catch in your own `execute` implementation.
+
+## Alias Support
+
+A command can respond to multiple names by calling `registerAlias` from its constructor:
+
+```cpp
+MyCommand::MyCommand()
+    : IMCCommand("mycommand", "Does something useful", ".mycommand <arg>") {
+    registerAlias("mc");
+    registerAlias("mycmd");
+}
+```
+
+`CommandMgr` checks both the primary name and every entry in `aliasList` when matching input, so `.mc <arg>`, `.mycmd <arg>`, and `.mycommand <arg>` are all equivalent.
+
+## Sending Feedback to the Client
+
+`clientMessageF` prints a formatted message to the client-side chat display without sending anything to the server. It is available to both `IMCCommand` and `IModule`:
+
+```cpp
+clientMessageF("Loaded config: %s", name.c_str());
+clientMessageF("Value must be between %d and %d", min, max);
+```
+
+<Info>
+Messages sent through `clientMessageF` appear only in your local chat window. They use the same colour-code system as the rest of Horion's UI (`%sGOLD%s`, `%sGREEN%s`, etc.).
+</Info>
+
+## Creating a Custom Command
+
+Implement a command by inheriting `IMCCommand`, calling the three-argument constructor from your initialiser list, and overriding `execute`:
+
+```cpp
+class MyCommand : public IMCCommand {
+public:
+    MyCommand() : IMCCommand("mycommand", "Does something", ".mycommand <arg>") {}
+    
+    bool execute(std::vector<std::string>* args) override {
+        if (args->size() < 2) return false;
+        clientMessageF("Got arg: %s", (*args)[1].c_str());
+        return true;
+    }
+};
+```
+
+Returning `false` from `execute` is the conventional signal that the user provided invalid input. `CommandMgr` will automatically display the string returned by `getUsage()` in the client chat.
+
+## Built-In Commands
+
+Horion ships with a full set of built-in commands registered by `CommandMgr::initCommands()`. A non-exhaustive selection:
+
+| Command | Purpose |
+|---|---|
+| `.help [command]` | List all commands, or show usage for one |
+| `.toggle <module>` | Enable or disable a module by name |
+| `.bind <module> <key>` | Assign a keybind to a module |
+| `.config <save\|load\|list> [name]` | Manage config profiles |
+| `.friend <add\|remove\|list> [name]` | Manage the friend list |
+| `.setprefix <char>` | Change the command prefix |
+| `.modules` | List all modules and their enabled state |
+| `.tp <x> <y> <z>` | Teleport to coordinates |
+
+<Tip>
+Run `.help` with no arguments for a live list of every registered command and its one-line description. Run `.help <command>` to see the full usage string for a specific command.
+</Tip>
+
+## The `CommandMgr` Singleton
+
+All commands are owned by the `CommandMgr` singleton (`extern CommandMgr* cmdMgr`). You can iterate the command list programmatically:
+
+```cpp
+for (IMCCommand* cmd : *cmdMgr->getCommandList()) {
+    // cmd->getCommand(), cmd->getDescription(), etc.
+}
+```
+
+This is exactly what `HelpCommand` does when rendering the command index.

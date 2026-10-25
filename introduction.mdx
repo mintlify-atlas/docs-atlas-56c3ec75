@@ -1,0 +1,106 @@
+---
+title: "Horion: Minecraft Bedrock Edition Utility Mod"
+sidebarTitle: "Introduction"
+description: "Horion is an open-source, DLL-injected utility mod for Minecraft: Bedrock Edition on Windows, featuring 60+ modules, 30+ commands, and a JavaScript scripting engine."
+---
+
+Horion is an open-source utility mod for Minecraft: Bedrock Edition on Windows that works by injecting a DLL directly into the running game process. This page covers what Horion is, how it is structured, the full range of features it provides, and the license terms that govern forking and redistribution. Whether you are a player looking to explore its capabilities or a developer evaluating the codebase, this introduction gives you the complete picture before you dive into any specific feature area.
+
+## What Is Horion?
+
+Horion enhances Minecraft: Bedrock Edition through **DLL injection** — a technique where a compiled Windows dynamic-link library (`Horion.dll`) is loaded into the Minecraft process at runtime. Once injected, the mod hooks game functions using [MinHook](https://github.com/TsudaKageyu/minhook), intercepts rendering through DirectX 11, and overlays its own UI and logic on top of the vanilla game — all without modifying any game files on disk.
+
+The project is written entirely in **C++17**, targeting the Win32 platform. Because it integrates at the binary level, it supports capabilities that are impossible with script-based modding approaches.
+
+<Note>
+  Horion targets **Windows only**. It relies on Win32 APIs and DirectX 11 hooks that have no equivalent on other platforms. Minecraft: Bedrock Edition must be installed via the **Microsoft Store**.
+</Note>
+
+## Feature Overview
+
+### Module System
+
+Horion's core functionality is organized into a **module system** with over 60 individual modules grouped across seven categories:
+
+| Category   | Description                                                      |
+| ---------- | ---------------------------------------------------------------- |
+| `COMBAT`   | Offensive and defensive combat automation (KillAura, Aimbot, CrystalAura, Criticals, Reach, Velocity, …) |
+| `VISUAL`   | Rendering enhancements and overlays (ESP, Tracers, FullBright, Xray, NameTags, ChestESP, Freecam, …) |
+| `MOVEMENT` | Locomotion and physics modifications (Fly, Speed, NoFall, Jesus, Bhop, Phase, Step, Scaffold, …) |
+| `PLAYER`   | Player-state automation (AutoArmor, AutoTotem, AutoSneak, AutoSprint, FastEat, InventoryMove, …) |
+| `WORLD`    | World-interaction tools (Nuker, InstaBreak, ChestStealer, Fucker, ChestAura, …) |
+| `MISC`     | Miscellaneous utilities (EditionFaker, Spammer, PacketLogger, Timer, Zoom, Crasher, …) |
+| `CUSTOM`   | Modules created through the JavaScript scripting API             |
+
+Every module can be toggled on/off individually, bound to a keyboard key, and configured through the built-in ClickGUI.
+
+### ClickGUI
+
+The **ClickGUI** is Horion's primary configuration interface. It renders in-game as a category-based panel overlay and lets you enable modules, adjust their settings, and bind keys — all without leaving Minecraft. Open it by pressing **Right Shift** (default keybind).
+
+### In-Game Command System
+
+Horion ships with **30+ built-in commands** that execute from the Minecraft chat input. Commands are prefixed with a configurable character (default: `.`) and cover everything from teleportation and module toggling to NBT editing, config management, and script execution. Example:
+
+```
+.toggle fly
+.tp 100 64 -200
+.bind killaura k
+.setprefix !
+```
+
+### JavaScript Scripting Engine
+
+Horion embeds Microsoft's **ChakraCore** JavaScript engine, allowing you to write scripts that interact with the game through a rich API. Scripts can register custom commands, create full custom modules that appear under the `CUSTOM` category in the ClickGUI, manipulate the local player, query entity lists, and draw custom overlays. The scripting surface is organized into namespaces including `Game`, `LocalPlayer`, `ModuleManager`, `CommandManager`, `Entity`, `Level`, `Draw`, and `Vector3`.
+
+### JSON Configuration Management
+
+All module states, keybinds, and settings are persisted as **JSON config files** managed by Horion's `ConfigManager`. You can load, save, and switch named configs using the `.config` command, making it straightforward to maintain different presets for different servers or playstyles.
+
+## Architecture at a Glance
+
+```
+Horion.dll
+├── Memory/          — MinHook-based function hooking, GameData access
+├── SDK/             — C++ wrappers for Minecraft internal classes
+├── Horion/Module/   — Module base class + all 60+ module implementations
+├── Horion/Command/  — Command manager + 30+ command implementations
+├── Horion/Scripting/— ChakraCore JS engine integration & API bindings
+├── Horion/Menu/     — ClickGUI and TabGUI rendering (DirectX 11)
+├── Horion/Config/   — JSON config load/save
+└── Utils/           — Math, text formatting, logging helpers
+```
+
+The DLL entry point (`Loader.cpp`) runs on a background thread spawned from `DllMain`, initializes all subsystems in order, and then drives the per-frame hook callbacks.
+
+## License
+
+Horion is released under the **Creative Commons Attribution-NonCommercial 4.0 International** license ([CC BY-NC 4.0](https://creativecommons.org/licenses/by-nc/4.0/)).
+
+<CardGroup cols={2}>
+  <Card title="You CAN" icon="circle-check" iconType="solid">
+    Fork the repository and distribute your own build, provided you give appropriate credit to the original project.
+  </Card>
+  <Card title="You CANNOT" icon="circle-xmark" iconType="solid">
+    Sell any code covered by this license or use Horion commercially in any form.
+  </Card>
+</CardGroup>
+
+Note that some bundled third-party components — including ChakraCore and the DirectX 11 toolkit — carry their own separate licenses.
+
+## Explore the Docs
+
+<CardGroup cols={2}>
+  <Card title="Installation" icon="download" href="/installation">
+    Download the injector and get Horion running in Minecraft: Bedrock Edition in minutes.
+  </Card>
+  <Card title="Modules" icon="cubes" href="/modules/overview">
+    Browse all 60+ modules across every category, with descriptions and settings for each.
+  </Card>
+  <Card title="Commands" icon="terminal" href="/commands/overview">
+    Reference guide for all 30+ built-in in-game commands and their arguments.
+  </Card>
+  <Card title="Scripting" icon="code" href="/scripting/overview">
+    Learn how to write JavaScript scripts that extend Horion with custom modules and commands.
+  </Card>
+</CardGroup>

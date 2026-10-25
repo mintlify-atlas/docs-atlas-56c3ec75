@@ -1,0 +1,99 @@
+{
+  "projectType": "general",
+  "projectName": "Horion",
+  "projectDescription": "Horion is a Minecraft: Bedrock Edition utility mod that injects as a DLL to provide gameplay enhancements through a module system, in-game commands, and a JavaScript scripting API.",
+  "theme": "aspen",
+  "primaryColor": "#4fb364",
+  "lightColor": "#429fb4",
+  "darkColor": "#a1dee9",
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Get Started",
+            "pages": [
+              "introduction",
+              "installation",
+              "building-from-source"
+            ]
+          },
+          {
+            "group": "Core Concepts",
+            "pages": [
+              "concepts/module-system",
+              "concepts/command-system",
+              "concepts/config-management",
+              "concepts/friend-list"
+            ]
+          },
+          {
+            "group": "Modules",
+            "pages": [
+              "modules/overview",
+              "modules/combat",
+              "modules/movement",
+              "modules/visual",
+              "modules/player",
+              "modules/world",
+              "modules/misc"
+            ]
+          },
+          {
+            "group": "Commands",
+            "pages": [
+              "commands/overview",
+              "commands/reference"
+            ]
+          },
+          {
+            "group": "Scripting",
+            "pages": [
+              "scripting/overview",
+              "scripting/api-reference",
+              "scripting/examples"
+            ]
+          },
+          {
+            "group": "Contributing",
+            "pages": [
+              "contributing/setup",
+              "contributing/guidelines"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "60+ gameplay modules across Combat, Visual, Movement, Player, World, and Misc categories",
+    "In-game command system with 30+ commands triggered by a configurable prefix",
+    "JavaScript scripting engine (powered by Chakra) for custom module and command creation",
+    "JSON-based config manager for saving and loading module settings",
+    "Click GUI for interactive module toggling and settings adjustment",
+    "Friend list system for team-aware modules",
+    "DLL injection into Minecraft: Bedrock Edition on Windows",
+    "ESP overlays, radar, waypoints, and other visual aids",
+    "Movement hacks: Fly, Speed, Bhop, Phase, NoFall, Spider, and more",
+    "Combat modules: Aimbot, KillAura, CrystalAura, AutoClicker, TriggerBot"
+  ],
+  "publicApiSurface": [
+    "IModule (base class: onTick, onEnable, onDisable, onPreRender, onPostRender, onMove, onSendPacket, onAttack, onKeyUpdate)",
+    "IMCCommand (base class: execute, getCommand, getDescription, getUsage)",
+    "ModuleManager::getModule<T>(), getModuleByName(), getModuleList()",
+    "ConfigManager::loadConfig(), saveConfig(), init()",
+    "ScriptManager::runScript(), importScriptFolder(), unloadAllScripts()",
+    "JS API: game.getLocalPlayer(), game.getLevel(), game.getClient()",
+    "JS API: localPlayer.setPosition(), setVelocity(), setViewAngles(), getInventory()",
+    "JS API: level.getAllEntities(), getAllTargetEntities(), getBlock()",
+    "JS API: entity.getPosition(), getVelocity(), isOnGround(), getViewAngles()",
+    "JS API: horion.getCommandManager(), getModuleManager(), getDrawUtils()",
+    "JS API: drawUtils.drawLine3d(), drawLine2d(), drawRectangle2d(), drawText2d(), setColor()",
+    "JS API: inventory.getItems(), getArmor(), getHeld(), getSlot(), moveItem(), setSelected()",
+    "JS API: moduleManager.getModuleByName(), registerModule()",
+    "JS API: commandManager.executeCommand()",
+    "Module categories: COMBAT, VISUAL, MOVEMENT, PLAYER, WORLD, MISC, CUSTOM",
+    "SettingEntry types: Float, Int, Bool, Enum, Text"
+  ]
+}

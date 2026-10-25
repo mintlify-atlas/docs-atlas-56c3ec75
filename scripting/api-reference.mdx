@@ -1,0 +1,731 @@
+---
+title: "Horion JavaScript Scripting API Complete Reference"
+sidebarTitle: "API Reference"
+description: "Full reference for every JS API object in Horion scripts: Game, LocalPlayer, Entity, Level, Inventory, DrawUtils, ModuleManager, and CommandManager."
+---
+
+Every Horion script runs inside a Chakra JavaScript context with a set of pre-injected global objects. This page documents all available objects, their methods, return types, and argument requirements. All object names are **case-sensitive**; the top-level globals use **PascalCase** (`Game`, `Horion`, `Vec3`, `Vec2`).
+
+<Note>
+Methods that receive or return positional data use `Vec3` or `Vec2` objects. You can pass a `Vec3` instance **or** provide the three numeric components directly as separate arguments — both calling conventions are accepted by functions that use `getVec3FromArguments` internally.
+</Note>
+
+## Game
+
+The `Game` global object is the primary entry point for reading the current game state.
+
+<AccordionGroup>
+  <Accordion title="Game.getLocalPlayer()">
+    Returns the local player object. The returned object has both the **LocalPlayer** and **Entity** methods available (LocalPlayer inherits the full Entity prototype).
+
+    **Returns:** `LocalPlayer` object
+
+    ```javascript
+    var player = Game.getLocalPlayer();
+    if (player.isValid()) {
+        log("Player is alive: " + player.getPosition().toString());
+    }
+    ```
+  </Accordion>
+
+  <Accordion title="Game.getLevel()">
+    Returns the level (world) object. Use `level.isValid()` before calling other level methods.
+
+    **Returns:** `Level` object
+
+    ```javascript
+    var level = Game.getLevel();
+    if (level.isValid()) {
+        var entities = level.getAllEntities();
+        log("Entity count: " + entities.length);
+    }
+    ```
+  </Accordion>
+
+  <Accordion title="Game.getClient()">
+    Returns the client identifier string. Always returns `"Horion"`.
+
+    **Returns:** `string`
+
+    ```javascript
+    log(Game.getClient()); // "Horion"
+    ```
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## LocalPlayer
+
+Obtained via `Game.getLocalPlayer()`. Inherits all **Entity** methods and adds the following player-specific methods.
+
+<AccordionGroup>
+  <Accordion title="localPlayer.setPosition(vec3)">
+    Teleports the player to the given world position. Accepts a `Vec3` object or three separate numeric arguments `(x, y, z)`.
+
+    **Parameters:** `Vec3 | (number x, number y, number z)`  
+    **Returns:** `true`
+
+    ```javascript
+    var player = Game.getLocalPlayer();
+    player.setPosition(new Vec3(0, 64, 0));
+    // or: player.setPosition(0, 64, 0);
+    ```
+  </Accordion>
+
+  <Accordion title="localPlayer.setVelocity(vec3)">
+    Sets the player's current velocity vector. Accepts a `Vec3` object or three separate numbers.
+
+    **Parameters:** `Vec3 | (number x, number y, number z)`  
+    **Returns:** `true`
+
+    ```javascript
+    player.setVelocity(new Vec3(0, 0.5, 0)); // small upward boost
+    ```
+  </Accordion>
+
+  <Accordion title="localPlayer.setViewAngles(vec3)">
+    Sets the player's view angles. The `x` component is treated as **yaw** and `y` as **pitch**. Internally calls `applyTurnDelta` so the change is smooth.
+
+    **Parameters:** `Vec3 | (number yaw, number pitch, number _ignored)`  
+    **Returns:** `true`
+
+    ```javascript
+    player.setViewAngles(new Vec3(90, 0, 0)); // face east
+    ```
+  </Accordion>
+
+  <Accordion title="localPlayer.setIsOnGround(bool)">
+    Overrides the player's on-ground flag.
+
+    **Parameters:** `boolean`  
+    **Returns:** `true`
+
+    ```javascript
+    player.setIsOnGround(true);
+    ```
+  </Accordion>
+
+  <Accordion title="localPlayer.getInventory()">
+    Returns the inventory object for this player.
+
+    **Returns:** `Inventory` object
+
+    ```javascript
+    var inv = player.getInventory();
+    log("Held: " + JSON.stringify(inv.getHeld()));
+    ```
+  </Accordion>
+
+  <Accordion title="localPlayer.breakBlock(vec3)">
+    Breaks the block at the given **absolute** world position.
+
+    **Parameters:** `Vec3 | (number x, number y, number z)`  
+    **Returns:** `true`
+
+    ```javascript
+    player.breakBlock(new Vec3(10, 63, 10));
+    ```
+  </Accordion>
+
+  <Accordion title="localPlayer.placeBlock(vec3)">
+    Places a block at the given **absolute** world position using the currently held item.
+
+    **Parameters:** `Vec3 | (number x, number y, number z)`  
+    **Returns:** `true`
+
+    ```javascript
+    player.placeBlock(new Vec3(10, 63, 10));
+    ```
+  </Accordion>
+
+  <Accordion title="localPlayer.breakBlockRelative(vec3)">
+    Breaks the block at a position **relative to the player's current position**.
+
+    **Parameters:** `Vec3 | (number x, number y, number z)`  
+    **Returns:** `true`
+
+    ```javascript
+    player.breakBlockRelative(new Vec3(1, 0, 0)); // break block 1 unit to the east
+    ```
+  </Accordion>
+
+  <Accordion title="localPlayer.placeBlockRelative(vec3)">
+    Places a block at a position **relative to the player's current position**.
+
+    **Parameters:** `Vec3 | (number x, number y, number z)`  
+    **Returns:** `true`
+
+    ```javascript
+    player.placeBlockRelative(new Vec3(0, -1, 0)); // place block beneath player
+    ```
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Entity
+
+Entity objects are returned by `Level.getAllEntities()`, `Level.getAllTargetEntities()`, and are also the base type of `LocalPlayer`. Always call `isValid()` before reading any data from an entity — entities can be removed between ticks.
+
+<AccordionGroup>
+  <Accordion title="entity.isValid()">
+    Returns `true` if the entity still exists in the world and can be safely queried.
+
+    **Returns:** `boolean`
+
+    ```javascript
+    if (!entity.isValid()) return;
+    ```
+  </Accordion>
+
+  <Accordion title="entity.getPosition()">
+    Returns the entity's current (server-authoritative) position.
+
+    **Returns:** `Vec3`
+
+    ```javascript
+    var pos = entity.getPosition();
+    log(pos.x + ", " + pos.y + ", " + pos.z);
+    ```
+  </Accordion>
+
+  <Accordion title="entity.getInterpolatedPosition()">
+    Returns the entity's **render-interpolated** position between the last two ticks, based on the current render frame time. Use this for smooth visual rendering.
+
+    **Returns:** `Vec3`
+
+    ```javascript
+    var renderPos = entity.getInterpolatedPosition();
+    ```
+  </Accordion>
+
+  <Accordion title="entity.getVelocity()">
+    Returns the entity's velocity vector.
+
+    **Returns:** `Vec3`
+
+    ```javascript
+    var vel = entity.getVelocity();
+    ```
+  </Accordion>
+
+  <Accordion title="entity.isOnGround()">
+    **Returns:** `boolean` — `true` if the entity is touching the ground.
+  </Accordion>
+
+  <Accordion title="entity.isInvisible()">
+    **Returns:** `boolean` — `true` if the entity has the invisibility effect.
+  </Accordion>
+
+  <Accordion title="entity.isInWater()">
+    **Returns:** `boolean` — `true` if the entity is submerged in water.
+  </Accordion>
+
+  <Accordion title="entity.isInLava()">
+    **Returns:** `boolean` — `true` if the entity is in lava.
+  </Accordion>
+
+  <Accordion title="entity.isSneaking()">
+    **Returns:** `boolean` — `true` if the entity is currently sneaking.
+  </Accordion>
+
+  <Accordion title="entity.getSize()">
+    Returns a `Vec3` where `x` = width, `y` = height, `z` = width (width is mirrored). Use `.x` for width and `.y` for height.
+
+    **Returns:** `Vec3`
+
+    ```javascript
+    var size = entity.getSize();
+    log("width=" + size.x + " height=" + size.y);
+    ```
+  </Accordion>
+
+  <Accordion title="entity.toString()">
+    Returns a human-readable string describing the entity.
+
+    **Returns:** `string` — e.g. `"Entity(isValid=true)"` or `"Entity(invalid)"`
+  </Accordion>
+
+  <Accordion title="entity.getViewAngles()">
+    Returns the entity's view angles as a `Vec3` where `x` = yaw and `y` = pitch (`z` is always 0).
+
+    **Returns:** `Vec3`
+  </Accordion>
+
+  <Accordion title="entity.getPitch()">
+    Returns the entity's pitch angle in degrees.
+
+    **Returns:** `number`
+  </Accordion>
+
+  <Accordion title="entity.getYaw()">
+    Returns the entity's yaw angle in degrees.
+
+    **Returns:** `number`
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Level
+
+Obtained via `Game.getLevel()`. Represents the current game world.
+
+<AccordionGroup>
+  <Accordion title="level.isValid()">
+    Returns `true` when the player is in a game session and alive. Always check this before calling other level methods.
+
+    **Returns:** `boolean`
+  </Accordion>
+
+  <Accordion title="level.getAllEntities()">
+    Returns an array of all entities currently loaded in the level, including non-targetable ones.
+
+    **Returns:** `Entity[]`
+
+    ```javascript
+    var all = Game.getLevel().getAllEntities();
+    log("Total entities: " + all.length);
+    ```
+  </Accordion>
+
+  <Accordion title="level.getAllTargetEntities()">
+    Returns only the entities that are considered valid targets (hostile mobs and players, excluding friends if the NoFriends module is disabled).
+
+    **Returns:** `Entity[]`
+
+    ```javascript
+    var targets = Game.getLevel().getAllTargetEntities();
+    ```
+  </Accordion>
+
+  <Accordion title="level.getBlock(vec3)">
+    Returns a plain object describing the block at the given world position.
+
+    **Parameters:** `Vec3 | (number x, number y, number z)`  
+    **Returns:** `{ name: string, tileName: string, blockId: number }`
+
+    ```javascript
+    var block = Game.getLevel().getBlock(new Vec3(0, 63, 0));
+    log(block.name + " (id=" + block.blockId + ")");
+    ```
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Inventory
+
+Obtained via `localPlayer.getInventory()`. Provides access to the player's item slots.
+
+<AccordionGroup>
+  <Accordion title="inventory.getItems()">
+    Returns an array of all 36 inventory slots (hotbar slots 0–8 first, then main inventory). Empty slots have `name: "air"` and `id: 0`.
+
+    **Returns:** `Array<{ name: string, id: number, amount: number }>`
+
+    ```javascript
+    var items = inv.getItems();
+    for (var i = 0; i < items.length; i++) {
+        if (items[i].name !== "air") log(i + ": " + items[i].name);
+    }
+    ```
+  </Accordion>
+
+  <Accordion title="inventory.getArmor()">
+    Returns the four armor slot items (helmet, chestplate, leggings, boots).
+
+    **Returns:** `Array<{ name: string, id: number, amount: number }>`
+  </Accordion>
+
+  <Accordion title="inventory.getHeld()">
+    Returns the item in the currently selected hotbar slot.
+
+    **Returns:** `{ name: string, id: number, amount: number }`
+  </Accordion>
+
+  <Accordion title="inventory.getSlot(index)">
+    Returns the item at a specific inventory slot index.
+
+    **Parameters:** `number index`  
+    **Returns:** `{ name: string, id: number, amount: number }`
+
+    ```javascript
+    var slot5 = inv.getSlot(5);
+    ```
+  </Accordion>
+
+  <Accordion title="inventory.moveItem(from, to)">
+    Moves an item from one slot index to another.
+
+    **Parameters:** `number from, number to`
+  </Accordion>
+
+  <Accordion title="inventory.setSelected(slot)">
+    Selects the given hotbar slot (0–8).
+
+    **Parameters:** `number slot`
+
+    ```javascript
+    inv.setSelected(0); // select first hotbar slot
+    ```
+  </Accordion>
+
+  <Accordion title="inventory.isFull">
+    A **property** (not a function) that returns `true` if no empty slots remain in the main inventory.
+
+    **Type:** `boolean`
+
+    ```javascript
+    if (inv.isFull) log("Inventory is full!");
+    ```
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Horion
+
+The `Horion` global object exposes the three main Horion subsystems.
+
+<AccordionGroup>
+  <Accordion title="Horion.getModuleManager()">
+    Returns the `ModuleManager` object.
+
+    **Returns:** `ModuleManager`
+  </Accordion>
+
+  <Accordion title="Horion.getCommandManager()">
+    Returns the `CommandManager` object.
+
+    **Returns:** `CommandManager`
+  </Accordion>
+
+  <Accordion title="Horion.getDrawUtils()">
+    Returns the `DrawUtils` object.
+
+    **Returns:** `DrawUtils`
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## ModuleManager
+
+Obtained via `Horion.getModuleManager()`.
+
+<AccordionGroup>
+  <Accordion title="moduleManager.getModuleByName(name)">
+    Looks up a module by its display name (case-insensitive). Returns `null` if not found.
+
+    **Parameters:** `string name`  
+    **Returns:** `Module | null`
+
+    ```javascript
+    var fly = Horion.getModuleManager().getModuleByName("Fly");
+    if (fly) fly.setEnabled(true);
+    ```
+  </Accordion>
+
+  <Accordion title="moduleManager.registerModule(name)">
+    Registers a new custom JavaScript module and adds it to the ClickGUI. The name must be between **3 and 30 characters** long and must not conflict with an existing module name. Returns a `JsModule` object (which has all `Module` methods plus `registerCallback`).
+
+    **Parameters:** `string name`  
+    **Returns:** `JsModule`
+
+    ```javascript
+    var mm = Horion.getModuleManager();
+    var mod = mm.registerModule("MyMod");
+    ```
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Module
+
+Returned by `moduleManager.getModuleByName()`. Provides read/write access to an existing built-in or script module.
+
+<AccordionGroup>
+  <Accordion title="module.getName()">
+    **Returns:** `string` — the module's display name.
+  </Accordion>
+
+  <Accordion title="module.isEnabled()">
+    **Returns:** `boolean` — whether the module is currently active.
+  </Accordion>
+
+  <Accordion title="module.setEnabled(bool)">
+    Enables or disables the module.
+
+    **Parameters:** `boolean`
+  </Accordion>
+
+  <Accordion title="module.toggle()">
+    Toggles the module's enabled state.
+  </Accordion>
+
+  <Accordion title="module.toString()">
+    **Returns:** `string` — e.g. `"Module(name=Fly)"`.
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## JsModule
+
+Returned by `moduleManager.registerModule()`. Has all `Module` methods plus:
+
+<AccordionGroup>
+  <Accordion title="jsModule.registerCallback(eventName, function)">
+    Registers a JavaScript function to be called when the given game event fires **and the module is enabled**. Registering a second callback for the same event name replaces the previous one.
+
+    **Parameters:** `string eventName, Function callback`
+
+    Valid event names:
+
+    | Event name | Fired when |
+    |---|---|
+    | `onTick` | Every game tick (20 times/sec) |
+    | `onEnable` | Module is enabled |
+    | `onDisable` | Module is disabled |
+    | `onAttack` | Player attacks an entity |
+    | `onRender` | Each 3D render frame |
+    | `onRender2d` | Each 2D HUD render frame |
+
+    ```javascript
+    mod.registerCallback("onTick", function() {
+        log("tick!");
+    });
+
+    mod.registerCallback("onRender2d", function() {
+        // draw HUD overlays here
+    });
+    ```
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## CommandManager
+
+Obtained via `Horion.getCommandManager()`.
+
+<AccordionGroup>
+  <Accordion title="commandManager.executeCommand(cmd)">
+    Executes a Horion command string exactly as if you had typed it in chat.
+
+    **Parameters:** `string cmd`
+
+    ```javascript
+    Horion.getCommandManager().executeCommand(".panic");
+    ```
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## DrawUtils
+
+Obtained via `Horion.getDrawUtils()`. All draw calls are only valid inside `onRender` (3D) or `onRender2d` (2D) callbacks.
+
+<Warning>
+Calling draw functions outside of a render callback produces undefined behaviour. Always call `setColor` before drawing to set the active colour.
+</Warning>
+
+<AccordionGroup>
+  <Accordion title="drawUtils.setColor(r, g, b [, a])">
+    Sets the current drawing colour. All components are in the range **0.0 – 1.0**. The alpha parameter is optional and defaults to `1.0` (fully opaque).
+
+    **Parameters:** `number r, number g, number b [, number a]`
+
+    ```javascript
+    var draw = Horion.getDrawUtils();
+    draw.setColor(1, 0, 0, 0.8); // semi-transparent red
+    ```
+  </Accordion>
+
+  <Accordion title="drawUtils.drawLine3d(start, end)">
+    Draws a line in 3D world space between two points. Each point can be a `Vec3` object or three separate numbers.
+
+    **Parameters:** `Vec3 start, Vec3 end`
+
+    ```javascript
+    draw.drawLine3d(new Vec3(0,64,0), new Vec3(10,64,10));
+    ```
+  </Accordion>
+
+  <Accordion title="drawUtils.drawLinestrip3d(points)">
+    Draws a connected strip of 3D lines through an array of `Vec3` points. The array must contain at least 2 points and no more than 100 000.
+
+    **Parameters:** `Vec3[]`
+
+    ```javascript
+    draw.drawLinestrip3d([
+        new Vec3(0, 64, 0),
+        new Vec3(5, 65, 5),
+        new Vec3(10, 64, 10)
+    ]);
+    ```
+  </Accordion>
+
+  <Accordion title="drawUtils.drawLine2d(start, end [, lineWidth])">
+    Draws a 2D line on the HUD. Coordinates are in screen pixels. `lineWidth` defaults to `1`.
+
+    **Parameters:** `Vec2 start, Vec2 end [, number lineWidth]`
+
+    ```javascript
+    draw.drawLine2d(new Vec2(10, 10), new Vec2(100, 100));
+    ```
+  </Accordion>
+
+  <Accordion title="drawUtils.drawRectangle2d(corner1, corner2 [, lineWidth])">
+    Draws the outline of a 2D rectangle. The two `Vec2` arguments are any two opposite corners; Horion normalises them internally. `lineWidth` defaults to `1`.
+
+    **Parameters:** `Vec2 corner1, Vec2 corner2 [, number lineWidth]`
+
+    ```javascript
+    draw.drawRectangle2d(new Vec2(50, 50), new Vec2(150, 100));
+    ```
+  </Accordion>
+
+  <Accordion title="drawUtils.fillRectangle2d(corner1, corner2)">
+    Fills a 2D rectangle with the current colour. The two `Vec2` arguments are opposite corners.
+
+    **Parameters:** `Vec2 corner1, Vec2 corner2`
+
+    ```javascript
+    draw.fillRectangle2d(new Vec2(50, 50), new Vec2(150, 100));
+    ```
+  </Accordion>
+
+  <Accordion title="drawUtils.drawText2d(text, pos [, textSize [, colorVec3 [, alpha]]])">
+    Renders a string on the HUD. `textSize` defaults to `1.0`. Optionally provide a `Vec3` colour (x=r, y=g, z=b) and a float alpha.
+
+    **Parameters:** `string text, Vec2 pos [, number textSize [, Vec3 color [, number alpha]]]`
+
+    ```javascript
+    draw.setColor(1, 1, 1, 1);
+    draw.drawText2d("Hello!", new Vec2(10, 10));
+    draw.drawText2d("Big red", new Vec2(10, 30), 1.5, new Vec3(1, 0, 0), 1);
+    ```
+  </Accordion>
+
+  <Accordion title="drawUtils.getTextWidth(text [, textSize])">
+    Returns the pixel width of the given string when rendered at the given scale. `textSize` defaults to `1.0`.
+
+    **Returns:** `number`
+
+    ```javascript
+    var w = draw.getTextWidth("Hello", 1);
+    ```
+  </Accordion>
+
+  <Accordion title="drawUtils.getTextLineHeight([textSize])">
+    Returns the pixel height of one line of text at the given scale. `textSize` defaults to `1.0`.
+
+    **Returns:** `number`
+
+    ```javascript
+    var h = draw.getTextLineHeight();
+    ```
+  </Accordion>
+
+  <Accordion title="drawUtils.getWindowSize()">
+    Returns the current screen (window) dimensions.
+
+    **Returns:** `Vec2` where `x` = width, `y` = height
+
+    ```javascript
+    var size = draw.getWindowSize();
+    log("Screen: " + size.x + "x" + size.y);
+    ```
+  </Accordion>
+
+  <Accordion title="drawUtils.getOrigin()">
+    Returns the current 3D render camera origin as a `Vec3`. Useful for computing distances or converting world to screen coordinates.
+
+    **Returns:** `Vec3`
+
+    ```javascript
+    var origin = draw.getOrigin();
+    ```
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Vec3
+
+A three-component float vector. Constructed with `new Vec3(x, y, z)`.
+
+<AccordionGroup>
+  <Accordion title="Properties and methods">
+    | Member | Type | Description |
+    |---|---|---|
+    | `vec3.x` | `number` | X component |
+    | `vec3.y` | `number` | Y component |
+    | `vec3.z` | `number` | Z component |
+    | `vec3.getX()` | `number` | Same as `.x` |
+    | `vec3.getY()` | `number` | Same as `.y` |
+    | `vec3.getZ()` | `number` | Same as `.z` |
+    | `vec3.add(other)` | `Vec3` | Component-wise addition |
+    | `vec3.sub(other)` | `Vec3` | Component-wise subtraction |
+    | `vec3.mul(other)` | `Vec3` | Component-wise multiplication |
+    | `vec3.div(other)` | `Vec3` | Component-wise division |
+    | `vec3.isValid()` | `boolean` | Returns true if the vector is a valid Vec3 |
+    | `vec3.toString()` | `string` | Human-readable representation |
+
+    ```javascript
+    var a = new Vec3(1, 2, 3);
+    var b = new Vec3(4, 5, 6);
+    var c = a.add(b); // Vec3(5, 7, 9)
+    log(a.x); // 1
+    ```
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Vec2
+
+A two-component float vector. Constructed with `new Vec2(x, y)`.
+
+<AccordionGroup>
+  <Accordion title="Properties and methods">
+    | Member | Type | Description |
+    |---|---|---|
+    | `vec2.x` | `number` | X component |
+    | `vec2.y` | `number` | Y component |
+    | `vec2.getX()` | `number` | Same as `.x` |
+    | `vec2.getY()` | `number` | Same as `.y` |
+    | `vec2.add(other)` | `Vec2` | Component-wise addition |
+    | `vec2.sub(other)` | `Vec2` | Component-wise subtraction |
+    | `vec2.mul(other)` | `Vec2` | Component-wise multiplication |
+    | `vec2.div(other)` | `Vec2` | Component-wise division |
+    | `vec2.isValid()` | `boolean` | Returns true if the vector is a valid Vec2 |
+    | `vec2.toString()` | `string` | Human-readable representation |
+
+    ```javascript
+    var screenCenter = new Vec2(960, 540);
+    ```
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Global functions
+
+<AccordionGroup>
+  <Accordion title="log(message)">
+    Prints a message to the Horion debug console. Accepts any value that can be coerced to a string.
+
+    **Parameters:** `string message`
+
+    ```javascript
+    log("Script loaded!");
+    log("Position: " + player.getPosition().toString());
+    ```
+  </Accordion>
+</AccordionGroup>

@@ -1,0 +1,172 @@
+---
+title: "Set Up a Horion Development Environment"
+sidebarTitle: "Dev Setup"
+description: "Fork Horion on GitHub, install Visual Studio with the C++ workload, restore NuGet packages, and compile Horion.dll for local development and injection."
+---
+
+Horion is a C++ DLL mod that injects into Minecraft: Bedrock Edition at runtime. Before you can write code, you need to compile the project from source on a Windows machine using Visual Studio. This page walks you through every step — from forking the repository to holding a working `Horion.dll` in your output folder.
+
+## Prerequisites
+
+Make sure the following are installed and available before you begin:
+
+- **Windows 10 or Windows 11** — the only supported host OS
+- **Visual Studio 2019 or 2022** — Community Edition is free
+- **Desktop development with C++ workload** — install it through the Visual Studio Installer
+- **Windows 10 SDK** — included in the C++ workload, target platform version `10.0`
+- **NuGet Package Manager** — bundled with Visual Studio; used to restore `directxtk_desktop_2017` and `Microsoft.XAudio2.Redist`
+
+<Note>
+  The project's `Horion.vcxproj` targets the **v142** platform toolset for x64
+  Debug and Release builds. Make sure the MSVC v142 build tools component is
+  selected in the Visual Studio Installer.
+</Note>
+
+## Build Steps
+
+<Steps>
+  <Step title="Fork the repository">
+    Go to [github.com/horionclient/Horion](https://github.com/horionclient/Horion) and click **Fork** in the top-right corner. This creates a personal copy under your GitHub account where you can freely push changes before opening a pull request.
+  </Step>
+
+  <Step title="Clone your fork">
+    Open a terminal and clone your fork locally. Replace `<your-username>` with your GitHub username:
+
+    ```bash
+    git clone https://github.com/<your-username>/Horion.git
+    cd Horion
+    ```
+  </Step>
+
+  <Step title="Open the solution in Visual Studio">
+    Double-click `Horion.sln` in the repository root, or launch Visual Studio and use **File → Open → Project/Solution** to locate the file. The solution contains a single project, `Horion`, configured as a **DynamicLibrary** for both x64 and Win32 platforms.
+  </Step>
+
+  <Step title="Restore NuGet packages">
+    Horion depends on two NuGet packages declared in `packages.config`:
+
+    | Package | Version |
+    |---|---|
+    | `directxtk_desktop_2017` | 2020.2.24.4 |
+    | `Microsoft.XAudio2.Redist` | 1.2.0 |
+
+    Restore them by right-clicking the **solution** in Solution Explorer and selecting **Restore NuGet Packages**. Visual Studio downloads the packages into the `packages/` directory. Build preparation will fail with an error if these targets are missing.
+
+    <Warning>
+      Restoring packages requires an internet connection. If you are behind a
+      corporate proxy, configure NuGet's proxy settings before running the
+      restore step.
+    </Warning>
+  </Step>
+
+  <Step title="Select a build configuration and compile">
+    Use the Configuration dropdown in the toolbar to choose a target:
+
+    | Configuration | Platform | Notes |
+    |---|---|---|
+    | `Debug` | `x64` | Debug info enabled, `MultiThreadedDebugDLL` runtime |
+    | `Release` | `x64` | Optimised, no debug info, `_WINDLL` defined |
+    | `BetaConf` | `x64` | Release-like; adds `_BETA` preprocessor definition |
+
+    Press **Ctrl+Shift+B** (or **Build → Build Solution**) to compile. The project compiles as C++17 (`stdcpp17`) with multi-processor compilation enabled (`/MP`).
+
+    <Tip>
+      Start with the **Debug|x64** configuration while developing — it produces
+      a `.pdb` file that makes crash diagnostics significantly easier.
+    </Tip>
+  </Step>
+
+  <Step title="Locate the output DLL">
+    After a successful build, find the compiled library at:
+
+    ```
+    x64/Release/Horion.dll   ← Release build
+    x64/Debug/Horion.dll     ← Debug build
+    ```
+
+    The output is a standard 64-bit Windows DLL ready for injection.
+  </Step>
+
+  <Step title="Inject into Minecraft: Bedrock Edition">
+    Launch Minecraft: Bedrock Edition and wait until you reach the title screen. Use any DLL injector to load `Horion.dll` into the `Minecraft.Windows.exe` process. The official injector binary is available at [horion.download/injector](https://horion.download/injector).
+
+    <Warning>
+      Only inject into a game instance you own and control. Horion's authors
+      take no responsibility for bans or consequences arising from use of this
+      mod.
+    </Warning>
+  </Step>
+</Steps>
+
+## CI/CD Pipeline
+
+Every pull request triggers an automated build via the GitHub Actions workflow defined in `.github/workflows/msbuild.yml`. The pipeline runs on `windows-latest`, restores NuGet packages with the `nuget restore` command, and then invokes MSBuild for the `Release` configuration:
+
+```yaml
+- name: Restore NuGet packages
+  run: nuget restore ${{env.SOLUTION_FILE_PATH}}
+
+- name: Build
+  run: msbuild /m /p:Configuration=${{env.BUILD_CONFIGURATION}} ${{env.SOLUTION_FILE_PATH}}
+```
+
+The live build status badge is powered by Azure DevOps Pipelines at [dev.azure.com/horionclient/Horion](https://dev.azure.com/horionclient/Horion/_build/latest?definitionId=2&branchName=master). If your PR breaks the build, it will be flagged before review.
+
+## Alternative: CMake Build
+
+A `CMakeLists.txt` is included in the repository root as an alternative to the Visual Studio solution. It targets C++17 and supports both MSVC and Clang compilers, automatically applying appropriate compiler flags for each:
+
+```cmake
+cmake_minimum_required(VERSION 3.12)
+project(Horion)
+
+set(CMAKE_CXX_STANDARD 17)
+
+if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    add_compile_options(-Wno-dynamic-class-memaccess -Wno-microsoft-goto
+                        -Wno-delete-incomplete /EHsc /Ob1)
+elseif (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+    add_compile_options(/MP /Ob1)
+endif()
+```
+
+Generate a build system and compile with:
+
+```bash
+cmake -B build -A x64
+cmake --build build --config Release
+```
+
+<Note>
+  The CMake build requires the `minhook` static library to be present in the
+  `minhook/` directory within the repository root. This is linked via
+  `link_directories(minhook)` in `CMakeLists.txt`.
+</Note>
+
+## Code Formatting
+
+The project ships a `.clang-format` file that enforces a consistent style across all C++ source files. Key rules include Google as the base style, 4-space indentation using tabs for continuation, and no column limit:
+
+```yaml
+BasedOnStyle: Google
+UseTab: ForContinuationAndIndentation
+IndentWidth: 4
+TabWidth: 4
+ColumnLimit: 0
+BreakBeforeBraces: Attach
+Language: Cpp
+```
+
+Run `clang-format` over any file you modify before committing:
+
+```bash
+clang-format -i Horion/Module/Modules/MyModule.cpp
+```
+
+Most editors (Visual Studio, VS Code, CLion) can apply clang-format automatically on save when the `.clang-format` file is present in the workspace root.
+
+<Tip>
+  Join the [official Horion Discord server](https://horion.download/discord) if
+  you run into build issues or need help understanding the codebase. The
+  community and core contributors are active there.
+</Tip>

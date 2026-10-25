@@ -1,0 +1,137 @@
+---
+title: "Using Horion's Friend List for Team Awareness"
+sidebarTitle: "Friend List"
+description: "Learn how the Horion friend list prevents combat modules from targeting teammates, and how to manage it with in-game commands and the NoFriends override."
+---
+
+Horion's friend list is a shared, in-memory roster of player names that combat modules consult before selecting a target. Any player on the list is treated as an ally — modules like KillAura, CrystalAura, and Aimbot will skip them entirely when scanning for targets. Adding your teammates before entering combat is one of the most important steps you can take to prevent accidental team-kills.
+
+## How It Works
+
+The `FriendList` class (`FriendList/FriendList.h`) maintains a `std::vector<std::string>` of player names behind a set of static accessor methods:
+
+```cpp
+class FriendList {
+private:
+    std::vector<std::string> List;
+
+public:
+    static std::vector<std::string> getList();
+    static bool findPlayer(const std::string& name);
+    static bool findPlayer(const char* name);
+    static void addPlayerToList(const std::string& name);
+    static bool removePlayer(const std::string& g);
+};
+
+extern FriendList g_friend;
+```
+
+The global `g_friend` instance is the single source of truth. All four methods operate on it statically, so any module or command can read or modify the list without holding a reference to the object.
+
+### Lookup Behaviour
+
+`findPlayer` uses a **substring search** (`std::string::find`), not an exact match:
+
+```cpp
+bool FriendList::findPlayer(const std::string& name) {
+    for (auto it = g_friend.List.begin(); it != g_friend.List.end(); ++it) {
+        if (it->find(name) != std::string::npos) {
+            return true;
+        }
+    }
+    return false;
+}
+```
+
+This means a friend entry of `"Steve"` will match both `"Steve"` and `"SteveBuilder"`. In practice this is rarely a problem, but use precise names to avoid unintended matches.
+
+`removePlayer` similarly uses a case-insensitive substring search before erasing the entry:
+
+```cpp
+bool FriendList::removePlayer(const std::string& g) {
+    // lowercases both sides before comparing
+    // erases the first matching entry and returns true
+}
+```
+
+## Modules That Respect the Friend List
+
+Any combat module that iterates nearby entities calls `FriendList::findPlayer` to skip whitelisted players. The modules that implement this check include (but are not limited to):
+
+<CardGroup cols={2}>
+  <Card title="KillAura" icon="sword">
+    Skips friendly players when sweeping for melee targets.
+  </Card>
+  <Card title="CrystalAura" icon="gem">
+    Will not place or explode crystals to damage a friend.
+  </Card>
+  <Card title="Aimbot" icon="crosshairs">
+    Excludes friends from the aim-lock target pool.
+  </Card>
+  <Card title="BowAimbot" icon="bow-arrow">
+    Does not lead-predict or lock onto friended players.
+  </Card>
+  <Card title="TriggerBot" icon="computer-mouse">
+    Suppresses auto-click when the crosshair is over a friend.
+  </Card>
+  <Card title="InfiniteAura" icon="rotate">
+    Omits friends from its extended-range target sweep.
+  </Card>
+</CardGroup>
+
+## Managing Friends In-Game
+
+The `FriendListCommand` exposes add, remove, and list operations through the standard command prefix:
+
+```
+.friend add <name>      — add a player to the friend list
+.friend remove <name>   — remove a player from the friend list
+.friend list            — print all current friends to client chat
+```
+
+<Tabs>
+  <Tab title="Add">
+    ```
+    .friend add Notch
+    ```
+    Calls `FriendList::addPlayerToList("Notch")`. The player is protected immediately — no reload or restart required.
+  </Tab>
+  <Tab title="Remove">
+    ```
+    .friend remove Notch
+    ```
+    Calls `FriendList::removePlayer("notch")` (the command lowercases the input). Returns `true` if a matching entry was found and erased.
+  </Tab>
+  <Tab title="List">
+    ```
+    .friend list
+    ```
+    Iterates `FriendList::getList()` and prints each name to client chat so you can verify your roster before a fight.
+  </Tab>
+</Tabs>
+
+## Persistence
+
+The friend list is saved as part of the active config profile. When `ConfigManager` calls `ModuleManager::onSaveConfig`, the module responsible for friend-list persistence writes all current names into the JSON object. On the next `loadConfig` call they are read back and the list is repopulated.
+
+<Note>
+Because friends are stored per-profile, switching to a different config profile will load that profile's friend list. If you want the same friends across all profiles, add them while each profile is active, or manually copy the relevant JSON keys between profile files.
+</Note>
+
+## The `NoFriends` Module
+
+`NoFriends` is a toggle module (`MISC` category) that temporarily suspends all friend-list checks. When it is enabled, combat modules target every nearby player regardless of friend status.
+
+<Warning>
+`NoFriends` is a global override — enabling it affects **all** combat modules simultaneously. Only enable it when you are certain no teammates are nearby, such as in a solo PvP scenario where you want to test a module's targeting behaviour.
+</Warning>
+
+## Best Practices
+
+<Tip>
+Add every teammate to your friend list before enabling any combat module in a multiplayer session. A single `.friend add <name>` takes under a second and eliminates the risk of an accidental team-kill.
+</Tip>
+
+- Run `.friend list` at the start of each session to confirm your roster is correct for the current config profile.
+- Use precise, correctly capitalised names — while `removePlayer` is case-insensitive, `addPlayerToList` stores the name exactly as typed, so inconsistent capitalisation can create duplicate entries.
+- If you play with a regular team, consider creating a dedicated config profile (e.g., `.config load team`) that has all teammates pre-loaded and your preferred combat settings tuned for team play.

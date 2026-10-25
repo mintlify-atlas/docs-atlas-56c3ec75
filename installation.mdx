@@ -1,0 +1,104 @@
+---
+title: "Install and Inject Horion into Minecraft Bedrock"
+sidebarTitle: "Installation"
+description: "Download the Horion injector, launch Minecraft: Bedrock Edition on Windows, and inject the DLL to unlock all modules, commands, and the ClickGUI."
+---
+
+Horion is distributed as a pre-built DLL paired with a dedicated injector executable that handles the entire injection process for you. This page walks through every step required to get Horion running inside Minecraft: Bedrock Edition on Windows — from verifying prerequisites and downloading the injector, through the injection itself, to opening the ClickGUI and issuing your first in-game command.
+
+## Prerequisites
+
+Before you begin, confirm you have the following:
+
+<CardGroup cols={2}>
+  <Card title="Windows 10 or 11" icon="windows">
+    Horion uses Win32 APIs and DirectX 11. macOS and Linux are not supported.
+  </Card>
+  <Card title="Minecraft: Bedrock Edition" icon="cube">
+    Must be installed through the **Microsoft Store** (the Windows 10/11 Edition). Java Edition is not supported.
+  </Card>
+</CardGroup>
+
+<Warning>
+  Horion targets **specific Minecraft: Bedrock Edition versions**. Using an unsupported game version may cause the injection to fail or the game to crash. Check the [Horion Discord](https://horion.download/discord) or the download page for the currently supported MCBE version before updating your game.
+</Warning>
+
+## Downloading the Injector
+
+The official Horion injector is available at:
+
+**[https://horion.download/injector](https://horion.download/injector)**
+
+Download the injector executable to a convenient location on your PC. No installation is required — it runs as a standalone `.exe`.
+
+<Warning>
+  **Antivirus false positives are expected.** DLL injectors interact with other processes in ways that security software treats as suspicious, even when the software is entirely benign. Windows Defender and most third-party AV tools will flag or quarantine the injector. You may need to add an exclusion for the injector file or the folder it lives in before running it. This is a known limitation of how DLL injection works, not an indication that Horion contains malware.
+</Warning>
+
+## Injecting Horion
+
+<Steps>
+  <Step title="Launch Minecraft: Bedrock Edition">
+    Open Minecraft: Bedrock Edition from the Microsoft Store or your Start menu and wait for it to reach the **main menu** (the title screen). The game must be fully loaded before you inject — attempting to inject during startup may crash the game.
+  </Step>
+
+  <Step title="Run the Horion Injector">
+    Double-click the injector executable you downloaded. If Windows SmartScreen or your antivirus prompts you, choose **Run anyway** / **Allow** after confirming you trust the source.
+
+    <Note>
+      You may need to run the injector as **Administrator** on some Windows configurations. Right-click the `.exe` and select **Run as administrator** if the standard launch does not work.
+    </Note>
+  </Step>
+
+  <Step title="Select the Minecraft Process">
+    The injector will automatically detect the running `Minecraft.Windows.exe` process. Confirm the selection and click **Inject** (or the equivalent button in your injector version). The injector will load `Horion.dll` into the Minecraft process.
+  </Step>
+
+  <Step title="Confirm Successful Injection">
+    Switch back to the Minecraft window. A successful injection is indicated by Horion's HUD elements appearing on screen — you should see the module list or a watermark overlay. The game should continue running normally.
+  </Step>
+</Steps>
+
+## Opening the ClickGUI
+
+Once injected, press **Right Shift** to open Horion's **ClickGUI** — the primary interface for managing modules, keybinds, and settings.
+
+Inside the ClickGUI you can:
+
+- **Enable / disable modules** by clicking their names
+- **Adjust module settings** by hovering over an enabled module and interacting with its sliders and toggles
+- **Bind modules to keyboard keys** for quick toggling during gameplay
+
+Press **Right Shift** again (or press **Escape**) to close the ClickGUI and return to normal gameplay.
+
+<Tip>
+  You can change the ClickGUI keybind through the in-game command system once you are comfortable with commands. See the Commands section for details.
+</Tip>
+
+## Using In-Game Commands
+
+Horion's command system is accessible directly from the Minecraft chat. The default command prefix is **`.`** (a period). Open the chat (`T` or `/`), type a command starting with `.`, and press Enter.
+
+```
+.help
+.toggle fly
+.modules
+```
+
+To change the prefix to a different character — for example `!` — use:
+
+```
+.setprefix !
+```
+
+After that, all commands use your new prefix (e.g. `!toggle fly`).
+
+<Info>
+  The full list of available commands can be displayed in-game with `.help`. For a detailed reference of every command and its arguments, see the [Commands Overview](/commands/overview).
+</Info>
+
+## Getting Help
+
+<Tip>
+  Join the official Horion community on Discord at **[https://horion.download/discord](https://horion.download/discord)** for support, announcements about supported MCBE versions, and community scripts. It is the fastest way to get help if something is not working.
+</Tip>

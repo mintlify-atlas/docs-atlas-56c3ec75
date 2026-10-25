@@ -1,0 +1,137 @@
+---
+title: "Horion In-Game Command System Overview"
+sidebarTitle: "Overview"
+description: "Learn how to use Horion's in-game command system: prefix, syntax, aliases, arguments, and tips for running commands in Minecraft Bedrock Edition."
+---
+
+Horion ships with a built-in command system that lets you control every part of the client without ever leaving Minecraft's chat box. Commands are fast, tab-friendly, and cover everything from toggling modules and managing configs to teleporting across the map and manipulating inventory items — all without requiring server-side operator permissions.
+
+## Opening the Chat
+
+Press **T** (or whatever key you have bound to "Open Chat") to open Minecraft's chat input box. Type your command and press **Enter** to execute it. The input is consumed by Horion before it reaches the server, so your commands never appear in public chat.
+
+<Tip>
+  You can also open chat with **/** — Horion intercepts the input regardless of which key you use to open it, as long as the message starts with the configured prefix.
+</Tip>
+
+## The Command Prefix
+
+Every Horion command must begin with the **command prefix**. The default prefix is a period (`.`). For example, to list all modules you would type:
+
+```
+.modules
+```
+
+### Changing the Prefix
+
+Use `.setprefix` to switch to any single character. The change persists across sessions (it is saved with your config).
+
+```
+.setprefix !
+```
+
+After running the above, all commands must start with `!` instead of `.`.
+
+<Warning>
+  If you change the prefix to a character that Minecraft also uses (such as `/`), Minecraft may intercept the input before Horion sees it. Stick to characters like `.`, `!`, `,`, or `#`.
+</Warning>
+
+## Getting Help In-Game
+
+Run `.help` with no arguments to print every registered command along with its one-line description:
+
+```
+.help
+```
+
+To see the usage string for a specific command, pass its name as the first argument:
+
+```
+.help bind
+.help tp
+.help enchant
+```
+
+The usage string shows the expected arguments in angle-bracket (`<required>`) and square-bracket (`[optional]`) notation.
+
+## Command Reference Table
+
+The table below lists every built-in command name, its alias(es), and a brief description. Full argument details are on the [Command Reference](/commands/reference) page.
+
+| Command | Alias(es) | Brief Description |
+|---|---|---|
+| `bind` | `b` | Bind a module to a keyboard key |
+| `unbind` | — | Remove a keybind from a module (or all modules) |
+| `toggle` | `t` | Toggle a module on or off |
+| `config` | — | Load, create, or save a named config profile |
+| `setprefix` | `prefix` | Change the single-character command prefix |
+| `help` | `h` | List all commands or show usage for one command |
+| `modules` | `mods` | Print all available modules with descriptions |
+| `hide` | — | Toggle visibility of the Horion HUD overlay |
+| `friend` | `friendlist` | Add or remove players from your friend list |
+| `coords` | `pos` | Print your current X / Y / Z coordinates |
+| `tp` | `teleport`, `setpos` | Teleport to absolute world coordinates |
+| `playertp` | — | Teleport directly to another player's position |
+| `relativeteleport` | `reltp`, `rtp`, `vclip` | Teleport relative to your current position |
+| `waypoint` | `wp` | Add, remove, or teleport to named waypoints |
+| `path` | `joe` | Start the pathfinder toward a Y level, XZ, XYZ, or player |
+| `server` | `ip` | Display the IP and port of the current server |
+| `give` | — | Spawn items into your inventory |
+| `enchant` | — | Apply enchantments to the item in your main hand |
+| `gamemode` | `gm` | Change your client-side game mode (0/1/2) |
+| `damage` | `dmg` | Deal fall-damage to yourself |
+| `xp` | — | Add experience points or levels to your player |
+| `say` | — | Send a raw chat message directly to the server |
+| `spammer` | `spam` | Configure the Spammer module message and delay |
+| `namespoof` | `ns`, `fakename`, `fn` | Set or reset a spoofed display name for realms/BDS |
+| `nbt` | `nbtraw` | Read or write NBT tags to/from your clipboard |
+| `setoffhand` | `soh` | Spawn an item directly into your offhand slot |
+| `dupe` | `d` | Duplicate the item currently held in your main hand |
+| `eject` | `uninject` | Completely unload Horion from the game process |
+| `execute` | `exec` | Execute inline JavaScript code via the script engine |
+| `commandblockexploit` | `cbe` | Run a server command without operator using a CBE item |
+| `panic` | — | Instantly disable every active module |
+| `top` | — | Teleport upward to the nearest open air pocket |
+| `script` | — | Load a script folder or unload all loaded scripts |
+| `bruh` | — | Prints "bruh moment" — a classic debug/test command |
+| `test` | — | Internal debug command (swap inventory slots 1 & 2) |
+
+## Using Aliases
+
+Most commands register one or more shorter aliases that work identically to the full command name. For example, these three lines do exactly the same thing:
+
+```
+.toggle killaura
+.t killaura
+```
+
+Aliases are always lowercase. Use `.help` to see which alias belongs to which command.
+
+## Passing Arguments
+
+Arguments are separated by **spaces** and typed directly after the command name. The first token after the prefix is always the command name; everything after that is an argument indexed from 1.
+
+```
+.bind killaura r
+.tp 100 64 -200
+.give diamond_sword 1
+```
+
+Some commands accept a variable number of arguments — optional ones are shown in square brackets in the usage string. If a required argument is missing, Horion will print a usage error in chat.
+
+<Note>
+  Multi-word string arguments (such as `.say` or `.spammer message`) are assembled by joining all remaining tokens with spaces, so you do not need quotes around phrases.
+</Note>
+
+## Quick-Start Examples
+
+```
+.help                          # list all commands
+.modules                       # list all modules
+.toggle killaura               # toggle KillAura on/off
+.bind sprint caps              # bind Sprint to Caps Lock
+.tp 0 64 0                     # teleport to world origin
+.coords                        # print current position
+.config save                   # save current config
+.panic                         # disable every module at once
+```

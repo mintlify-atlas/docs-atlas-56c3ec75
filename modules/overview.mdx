@@ -1,0 +1,72 @@
+---
+title: "Horion Module System Overview and Categories"
+sidebarTitle: "Overview"
+description: "Explore Horion's 60+ modules across 7 categories. Each module supports keybinds, configurable settings, and can be toggled via ClickGUI or chat commands."
+---
+
+Horion organizes its functionality into a **module system** — a collection of over 60 individual features grouped across seven categories: Combat, Movement, Visual, Player, World, Misc, and Custom. Every module can be independently enabled or disabled, assigned a keyboard shortcut, and tuned through its own set of configurable settings (floats, integers, booleans, and enum options). Whether you prefer clicking through a GUI or typing commands, Horion gives you full control over which modules are active and how they behave.
+
+## Opening the ClickGUI
+
+The ClickGUI is the primary interface for browsing, enabling, and configuring modules. Press **Right Shift** (default keybind) to open it. Inside the GUI, modules are listed by category. Left-click a module name to toggle it on or off. Right-click (or click the arrow/expand button) to reveal its settings panel where you can drag sliders, flip toggles, and choose enum options.
+
+<Note>
+  The ClickGUI itself is a module (`ClickGuiMod`) in the Visual category. You can rebind it just like any other module using `.bind ClickGuiMod <key>`.
+</Note>
+
+## Chat Commands
+
+You can manage modules entirely from the in-game chat without touching the GUI:
+
+| Command | Description |
+|---|---|
+| `.toggle <modulename>` | Enable or disable a module by name |
+| `.bind <modulename> <key>` | Assign a keyboard shortcut to a module |
+| `.bind <modulename> none` | Remove a module's keybind |
+
+**Examples:**
+```
+.toggle Killaura
+.bind Fly F
+.bind Speed NUMPAD2
+```
+
+Module names are not case-sensitive. Use the name exactly as it appears in the ClickGUI (e.g., `Killaura`, `CrystalAura`, `FullBright`).
+
+## Setting Types
+
+Each module exposes zero or more settings. Settings come in four types:
+
+| Type | Description | Example |
+|---|---|---|
+| `float` | Decimal number within a min/max range | `range = 4.0` (min 3, max 8) |
+| `int` | Integer within a min/max range | `delay = 0` (min 0, max 20) |
+| `bool` | True/false toggle | `multiaura = true` |
+| `enum` | Selection from a named list of options | `mode = Fly \| CubeGlide` |
+
+Settings persist between sessions via Horion's config system and are saved and loaded automatically.
+
+## Module Categories
+
+Horion's modules are divided into seven categories. Click a card below to read detailed documentation for each one.
+
+<CardGroup cols={2}>
+  <Card title="Combat" icon="sword" href="/modules/combat">
+    Aimbot, KillAura, CrystalAura, TriggerBot, AutoClicker, Velocity, and more PvP automation tools.
+  </Card>
+  <Card title="Movement" icon="person-running" href="/modules/movement">
+    Fly, Speed, Bhop, Phase, NoFall, Spider, Scaffold, and over a dozen other traversal modules.
+  </Card>
+  <Card title="Visual" icon="eye" href="/modules/visual">
+    ESP, Radar, Tracers, FullBright, Xray, HUD customization, and camera modules.
+  </Card>
+  <Card title="Player" icon="user" href="/modules/player">
+    AutoArmor, AutoTotem, InventoryCleaner, Reach, Hitbox, AntiBot, and quality-of-life utilities.
+  </Card>
+  <Card title="World" icon="cube" href="/modules/world">
+    Nuker, Scaffold, Tower, InstaBreak, and block-interaction tools.
+  </Card>
+  <Card title="Misc" icon="wrench" href="/modules/misc">
+    Blink, PacketLogger, Crasher, Spammer, Derp, Teleport, and packet-level utilities.
+  </Card>
+</CardGroup>

@@ -1,0 +1,837 @@
+---
+title: "Horion Command Reference: All Built-in Commands"
+sidebarTitle: "Reference"
+description: "Complete reference for every built-in Horion command: syntax, arguments, aliases, and usage examples for all 35+ commands in Minecraft Bedrock Edition."
+---
+
+This page documents every command that ships with Horion, extracted directly from the source code. Each entry lists the exact command name, its registered aliases, the full usage string, a description of what it does, a breakdown of every argument, and a practical example. Commands are grouped alphabetically. All examples assume the default prefix (`.`).
+
+<Note>
+  Arguments shown as `<like this>` are **required**. Arguments shown as `[like this]` are **optional**. The command prefix is not part of the argument list — it is stripped before parsing.
+</Note>
+
+---
+
+## Module Control
+
+<AccordionGroup>
+
+<Accordion title="bind — Bind a module to a key">
+
+**Command:** `bind` · **Alias:** `b`
+
+**Usage:** `.bind <module> <key>`
+
+**Description:** Binds a module to a keyboard key so it can be toggled with that key at any time. Key names are matched case-insensitively. Use the special key name `none` to unbind a key without removing the module. If you run `.bind <module>` with no key, Horion prints the module's current keybind.
+
+| Argument | Type | Required | Description |
+|---|---|---|---|
+| `module` | string | ✅ | The name of the module to bind (e.g. `killaura`) |
+| `key` | string | ❌ | A single character (`r`) or a named key (`caps`, `f1`). Omit to query the current bind. Use `none` to clear. |
+
+**Examples:**
+```
+.bind killaura r        # bind KillAura to the R key
+.bind sprint caps       # bind Sprint to Caps Lock
+.bind killaura none     # remove KillAura's keybind
+.bind killaura          # print KillAura's current keybind
+```
+
+</Accordion>
+
+<Accordion title="unbind — Remove a keybind from a module">
+
+**Command:** `unbind`
+
+**Usage:** `.unbind <module | all>`
+
+**Description:** Removes the keybind from the specified module, setting it to `0x0` (unbound). Passing `all` instead of a module name prompts a confirmation message; append `force` to actually unbind every module at once.
+
+| Argument | Type | Required | Description |
+|---|---|---|---|
+| `module` | string | ✅ | Module name to unbind, or the literal string `all` |
+| `force` | literal | ❌ | Required when using `all` to confirm the bulk-unbind |
+
+**Examples:**
+```
+.unbind killaura        # unbind KillAura
+.unbind all             # prints a confirmation prompt
+.unbind all force       # unbinds every module immediately
+```
+
+</Accordion>
+
+<Accordion title="toggle — Toggle a module on or off">
+
+**Command:** `toggle` · **Alias:** `t`
+
+**Usage:** `.toggle <module>`
+
+**Description:** Flips the enabled state of the specified module. If the module is currently off it will be turned on, and vice versa. Flash-mode modules (those that can only be triggered, not held) cannot be toggled with this command.
+
+| Argument | Type | Required | Description |
+|---|---|---|---|
+| `module` | string | ✅ | The name of the module to toggle |
+
+**Examples:**
+```
+.toggle killaura
+.t sprint
+.toggle fly
+```
+
+</Accordion>
+
+<Accordion title="modules — List all available modules">
+
+**Command:** `modules` · **Alias:** `mods`
+
+**Usage:** `.modules`
+
+**Description:** Prints every registered module along with its tooltip/description in chat. Useful for discovering module names to use with `bind`, `toggle`, and `unbind`.
+
+**Example:**
+```
+.modules
+.mods
+```
+
+</Accordion>
+
+<Accordion title="panic — Disable every active module immediately">
+
+**Command:** `panic`
+
+**Usage:** `.panic`
+
+**Description:** Iterates through the full module list and calls `setEnabled(false)` on each one. This is the fastest way to deactivate all Horion features at once — for example before a screen-share or if something goes wrong mid-session.
+
+<Warning>
+  `panic` disables **every** module including purely cosmetic ones. You will need to re-enable anything you want after running it.
+</Warning>
+
+**Example:**
+```
+.panic
+```
+
+</Accordion>
+
+</AccordionGroup>
+
+---
+
+## Configuration
+
+<AccordionGroup>
+
+<Accordion title="config — Load, create, or save a config profile">
+
+**Command:** `config`
+
+**Usage:** `.config <load|new|save> <name>`
+
+**Description:** Manages named configuration profiles stored on disk. Use `new` to create and immediately switch to a blank config with the given name. Use `load` to load an existing config file. Use `save` (no name argument required) to write the current in-memory settings back to the active config file.
+
+| Argument | Type | Required | Description |
+|---|---|---|---|
+| `action` | `load` \| `new` \| `save` | ✅ | What to do with the config |
+| `name` | string | ✅ for `load`/`new` | The config profile name (filename without extension) |
+
+**Examples:**
+```
+.config save              # save current settings
+.config load pvp          # load the "pvp" config
+.config new clean         # create and switch to a new blank "clean" config
+```
+
+</Accordion>
+
+<Accordion title="setprefix — Change the command prefix character">
+
+**Command:** `setprefix` · **Alias:** `prefix`
+
+**Usage:** `.setprefix <char>`
+
+**Description:** Replaces the single-character prefix used to identify Horion commands. The new prefix takes effect immediately for all subsequent commands in the same session. The change is saved in your config.
+
+| Argument | Type | Required | Description |
+|---|---|---|---|
+| `char` | single character | ✅ | The new prefix character (must be exactly 1 character) |
+
+**Examples:**
+```
+.setprefix !       # switch prefix to !
+!setprefix .       # switch back to .
+```
+
+</Accordion>
+
+<Accordion title="hide — Toggle the Horion HUD overlay">
+
+**Command:** `hide`
+
+**Usage:** `.hide`
+
+**Description:** Calls `GameData::hide()` to toggle the visibility of all Horion on-screen elements (module list, watermark, etc.). Running it again while hidden makes everything reappear. Useful for recording or screenshots.
+
+**Example:**
+```
+.hide
+```
+
+</Accordion>
+
+</AccordionGroup>
+
+---
+
+## Information & Help
+
+<AccordionGroup>
+
+<Accordion title="help — List commands or show usage for a specific command">
+
+**Command:** `help` · **Alias:** `h`
+
+**Usage:** `.help [command]`
+
+**Description:** With no arguments, iterates through every registered command and prints `<name> - <description>` for each one. When a command name is passed as the first argument, Horion prints the usage string for that command (as returned by `getUsage()`).
+
+| Argument | Type | Required | Description |
+|---|---|---|---|
+| `command` | string | ❌ | Name of a specific command to look up |
+
+**Examples:**
+```
+.help               # list all commands
+.h bind             # show bind usage
+.help enchant       # show enchant usage
+```
+
+</Accordion>
+
+<Accordion title="coords — Print current X / Y / Z position">
+
+**Command:** `coords` · **Alias:** `pos`
+
+**Usage:** `.coords`
+
+**Description:** Reads the local player's position vector and prints it to chat, correcting for eye height (subtracting 1.62 from the Y value so you see the feet-level Y coordinate). Output format: `X: <x> Y: <y> Z: <z>`.
+
+**Example:**
+```
+.coords
+.pos
+```
+
+</Accordion>
+
+<Accordion title="server — Display current server IP and port">
+
+**Command:** `server` · **Alias:** `ip`
+
+**Usage:** `.server`
+
+**Description:** Checks whether you are connected to a remote server via RakNet. If you are, it prints the server's IP address and port. If you are playing in a local/LAN world it prints a "not on a server" message.
+
+**Example:**
+```
+.server
+.ip
+```
+
+</Accordion>
+
+</AccordionGroup>
+
+---
+
+## Teleportation
+
+<AccordionGroup>
+
+<Accordion title="tp — Teleport to absolute world coordinates">
+
+**Command:** `tp` · **Aliases:** `teleport`, `setpos`
+
+**Usage:** `.tp <X> <Y> <Z>`
+
+**Description:** Sets your player position to the exact world coordinates given. The Y value is automatically offset by +1 so you land on top of the specified Y level rather than inside it. Coordinates are floating-point, so you can teleport to fractional positions.
+
+| Argument | Type | Required | Description |
+|---|---|---|---|
+| `X` | float | ✅ | Target X coordinate |
+| `Y` | float | ✅ | Target Y coordinate (feet level — +1 applied automatically) |
+| `Z` | float | ✅ | Target Z coordinate |
+
+**Examples:**
+```
+.tp 100 64 -200
+.teleport 0 128 0
+.setpos -500.5 4 300
+```
+
+</Accordion>
+
+<Accordion title="playertp — Teleport to another player's position">
+
+**Command:** `playertp`
+
+**Usage:** `.playertp <playerName>`
+
+**Description:** Searches the entity list for a player whose name tag contains the given substring (case-insensitive) and teleports you directly to their position. If no matching player is found, an error message is shown.
+
+| Argument | Type | Required | Description |
+|---|---|---|---|
+| `playerName` | string | ✅ | Full or partial name of the target player |
+
+**Examples:**
+```
+.playertp Steve
+.playertp xX
+```
+
+</Accordion>
+
+<Accordion title="relativeteleport — Teleport relative to your current position">
+
+**Command:** `relativeteleport` · **Aliases:** `reltp`, `rtp`, `vclip`
+
+**Usage:** `.relativeteleport <X> <Y> <Z>`
+
+**Description:** Offsets your position by the given deltas relative to your current eye position. Positive Y moves you upward; negative Y moves you down (useful as a vertical clip). All three values are required and accept floating-point numbers.
+
+| Argument | Type | Required | Description |
+|---|---|---|---|
+| `X` | float | ✅ | Relative X offset |
+| `Y` | float | ✅ | Relative Y offset |
+| `Z` | float | ✅ | Relative Z offset |
+
+**Examples:**
+```
+.rtp 0 10 0          # move 10 blocks upward
+.vclip 0 -5 0        # clip 5 blocks down through blocks
+.reltp 50 0 0        # move 50 blocks east
+```
+
+</Accordion>
+
+<Accordion title="top — Teleport upward to the nearest open air pocket">
+
+**Command:** `top`
+
+**Usage:** `.top`
+
+**Description:** Scans upward from your current position block by block. First it finds the nearest solid block above you, then continues scanning until it finds two consecutive air blocks — and teleports you there. If there are no blocks above you, or no open air pocket above the highest block, it tells you so.
+
+<Warning>
+  The `top` command description notes it is **highly recommended against** using this inside the Nether, where the bedrock ceiling could lead to unexpected results.
+</Warning>
+
+**Example:**
+```
+.top
+```
+
+</Accordion>
+
+<Accordion title="waypoint — Manage named waypoints">
+
+**Command:** `waypoint` · **Alias:** `wp`
+
+**Usage:** `.waypoint <add|remove|teleport|removeall> <name> [x y z]`
+
+**Description:** Full waypoint management. `add` saves the current position (or an explicit XYZ) as a named waypoint in the current dimension. `remove` deletes a waypoint by name. `teleport` (or `tp`) moves you to a saved waypoint. `removeall` clears every waypoint. Names must be 2–30 characters and are sanitized. Requires the **Waypoints** module to be enabled to see markers in-game.
+
+| Argument | Type | Required | Description |
+|---|---|---|---|
+| `action` | `add` \| `remove` \| `teleport` \| `removeall` | ✅ | Sub-command to run |
+| `name` | string | ✅ (except `removeall`) | Waypoint label (2–30 characters) |
+| `x y z` | floats | ❌ | Explicit coordinates for `add`; defaults to current position |
+
+**Examples:**
+```
+.waypoint add base              # save current pos as "base"
+.wp add farm 100 64 -200        # save explicit coords as "farm"
+.wp teleport base               # teleport to "base"
+.wp remove farm                 # delete "farm"
+.waypoint removeall             # clear all waypoints
+```
+
+</Accordion>
+
+<Accordion title="path — Pathfinder navigation (Joe)">
+
+**Command:** `path` · **Alias:** `joe`
+
+**Usage:** `.path <y|xz|xyz|player> [args]`
+
+**Description:** Starts Horion's built-in pathfinder (internally called "Joe") towards a goal. Four goal types are supported: navigate to a target **Y level**, navigate to an **XZ** position (ignoring Y), navigate to a specific **XYZ** block, or navigate to a **player** by name. The FollowPathModule must not already be active when you run the command.
+
+| Sub-command | Arguments | Description |
+|---|---|---|
+| `y` | `<yLevel>` (int 1–255) | Navigate to a specific Y level |
+| `xz` | `<x> <z>` | Navigate to X/Z ignoring height |
+| `xyz` | `<x> <y> <z>` | Navigate to an exact block position |
+| `player` / `p` | `<playerName>` | Navigate toward a named player |
+
+**Examples:**
+```
+.path y 11             # navigate to Y=11 (diamond level)
+.path xz 500 -300      # navigate toward (500, ?, -300)
+.path xyz 0 64 0       # navigate to world origin at Y=64
+.path player Steve     # navigate toward Steve
+.joe y 64              # same as .path y 64 using the alias
+```
+
+<Note>
+  Disable the FollowPathModule (e.g. `.toggle followpath`) to stop the pathfinder mid-route.
+</Note>
+
+</Accordion>
+
+</AccordionGroup>
+
+---
+
+## Inventory & Items
+
+<AccordionGroup>
+
+<Accordion title="give — Spawn items into your inventory">
+
+**Command:** `give`
+
+**Usage:** `.give <itemName> <count> [itemData] [nbt]`
+
+**Description:** Spawns items directly into the first available inventory slots. Accepts both numeric item IDs and string item names (e.g. `diamond_sword`). Counts larger than 64 are split across multiple stacks automatically. When a fifth argument is provided, the NBT compound tag is read from the clipboard and applied to the generated item.
+
+| Argument | Type | Required | Description |
+|---|---|---|---|
+| `itemName` | string or int | ✅ | Item name (`diamond_sword`) or numeric ID |
+| `count` | int | ✅ | Total number of items to give |
+| `itemData` | int | ❌ | Item data/damage value (default `0`) |
+| `nbt` | flag | ❌ | Any 5th argument triggers clipboard NBT application |
+
+**Examples:**
+```
+.give diamond_sword 1
+.give 276 1 0           # diamond sword by ID
+.give arrow 256         # 4 full stacks of arrows
+.give diamond_sword 1 0 nbt   # apply clipboard NBT tag
+```
+
+</Accordion>
+
+<Accordion title="enchant — Enchant the held item">
+
+**Command:** `enchant`
+
+**Usage:** `.enchant <enchantment> <level> [mode]`
+
+**Description:** Applies an enchantment to the item currently in your main hand. The enchantment can be specified as a **name string** (e.g. `sharpness`) or a **numeric ID**. Use the special name `all` to apply every enchantment at once. Level defaults to `32767` (maximum). The optional `mode` argument controls whether inventory transaction actions are automatically sent (`1` = auto, `0` = manual); default is auto (`1`).
+
+**Supported enchantment names:** `protection`, `fire_protection`, `feather_falling`, `blast_protection`, `projectile_protection`, `thorns`, `respiration`, `depth_strider`, `aqua_affinity`, `frost_walker`, `sharpness`, `smite`, `bane_of_arthropods`, `knockback`, `fire_aspect`, `looting`, `channeling`, `impaling`, `loyalty`, `riptide`, `silktouch`, `fortune`, `unbreaking`, `efficiency`, `mending`, `power`, `punch`, `flame`, `infinity`, `multishot`, `quick_charge`, `piercing`, `luck_of_sea`, `lure`, `soul_speed`.
+
+| Argument | Type | Required | Description |
+|---|---|---|---|
+| `enchantment` | string or int | ✅ | Enchant name, numeric ID, or `all` |
+| `level` | int | ❌ | Enchantment level (default `32767`) |
+| `mode` | `0` or `1` | ❌ | `1` = auto transaction (default), `0` = skip transaction |
+
+**Examples:**
+```
+.enchant sharpness           # max sharpness on held item
+.enchant sharpness 5         # sharpness V
+.enchant all                 # every enchantment at max level
+.enchant 9 32767             # sharpness by ID
+```
+
+</Accordion>
+
+<Accordion title="setoffhand — Spawn an item into the offhand slot">
+
+**Command:** `setoffhand` · **Alias:** `soh`
+
+**Usage:** `.setoffhand <itemName> <count> [itemData] [nbt]`
+
+**Description:** Spawns the specified item directly into the player's offhand slot. Accepts item names or numeric IDs. If a fifth argument is provided, the NBT compound tag is read from the clipboard and applied to the item before placing it in the offhand.
+
+| Argument | Type | Required | Description |
+|---|---|---|---|
+| `itemName` | string or int | ✅ | Item name or numeric ID |
+| `count` | int | ✅ | Stack size (max 64 for a single offhand item) |
+| `itemData` | int | ❌ | Item data/damage value (default `0`) |
+| `nbt` | flag | ❌ | Any 5th argument triggers clipboard NBT application |
+
+**Examples:**
+```
+.setoffhand shield 1
+.soh totem_of_undying 1
+.setoffhand 522 1 0       # totem by numeric ID
+```
+
+</Accordion>
+
+<Accordion title="dupe — Duplicate the held item">
+
+**Command:** `dupe` · **Alias:** `d`
+
+**Usage:** `.dupe [count] [mode]`
+
+**Description:** Duplicates the item stack currently held in the main hand. By default the item is given to the inventory (`mode 1 = give`). Setting mode to `0` places the duplicate in the offhand slot instead. The `count` argument overrides the stack size of the duplicate.
+
+| Argument | Type | Required | Description |
+|---|---|---|---|
+| `count` | int | ❌ | Stack size for the duplicated item |
+| `mode` | `1` or `0` | ❌ | `1` = give to inventory (default), `0` = place in offhand |
+
+**Examples:**
+```
+.dupe                 # duplicate held item to inventory
+.dupe 64              # duplicate as a stack of 64
+.dupe 1 0             # duplicate to offhand slot
+.d 64                 # alias shorthand
+```
+
+</Accordion>
+
+<Accordion title="nbt — Read or write NBT tags via clipboard">
+
+**Command:** `nbt` · **Alias:** `nbtraw`
+
+**Usage:** `.nbt <read|save|write|load>` or `.nbtraw write <nbt>`
+
+**Description:** Reads NBT data from the entity or block entity you are pointing at (or the held item's tag) and copies it to the clipboard, or writes NBT from the clipboard back onto the held item. Point your crosshair at a block entity or mob before using `read`. The `nbtraw` alias allows inline NBT to be passed directly on the command line instead of from the clipboard.
+
+| Sub-command | Description |
+|---|---|
+| `read` | Copy NBT of aimed entity/block entity/item to clipboard |
+| `save` | Serialize the held item's full tag to clipboard |
+| `write` | Apply clipboard NBT to held item's user data |
+| `load` | Load clipboard NBT fully into held item (sets count to 64) |
+
+<Note>
+  Reading NBT from mobs only works in a **local world** — it is not available when connected to a remote server.
+</Note>
+
+**Examples:**
+```
+.nbt read              # copy aimed entity/block NBT to clipboard
+.nbt save              # serialize held item tag to clipboard
+.nbt write             # paste clipboard NBT onto held item
+.nbt load              # fully load clipboard tag onto held item
+.nbtraw write {Count:1b,Name:"minecraft:diamond"}
+```
+
+</Accordion>
+
+<Accordion title="eject — Unload Horion from the game process">
+
+**Command:** `eject` · **Alias:** `uninject`
+
+**Usage:** `.eject`
+
+**Description:** Calls `GameData::terminate()` to cleanly unload Horion from the Minecraft process. After running this command, no Horion features will be active until you re-inject the DLL.
+
+<Warning>
+  This fully removes the mod from memory. You will need to re-inject to use Horion again.
+</Warning>
+
+**Example:**
+```
+.eject
+.uninject
+```
+
+</Accordion>
+
+</AccordionGroup>
+
+---
+
+## Player & World
+
+<AccordionGroup>
+
+<Accordion title="gamemode — Change your client-side game mode">
+
+**Command:** `gamemode` · **Alias:** `gm`
+
+**Usage:** `.gamemode <number>`
+
+**Description:** Sets the local player's game mode by calling `setGameModeType()`. Accepts numeric values: `0` = Survival, `1` = Creative, `2` = Adventure. This is a client-side change.
+
+| Argument | Type | Required | Description |
+|---|---|---|---|
+| `number` | int (0–2) | ✅ | `0` Survival, `1` Creative, `2` Adventure |
+
+**Examples:**
+```
+.gamemode 1       # creative mode
+.gm 0             # survival mode
+.gamemode 2       # adventure mode
+```
+
+</Accordion>
+
+<Accordion title="damage — Deal fall damage to yourself">
+
+**Command:** `damage` · **Alias:** `dmg`
+
+**Usage:** `.damage <amount>`
+
+**Description:** Triggers fall damage on the local player via `causeFallDamage()`. The actual damage dealt is `amount + 3` (the minimum 3 fall-damage offset is added automatically). If the **NoFall** module is active, it is temporarily disabled for the duration of the damage call. Values below 1 are rejected.
+
+| Argument | Type | Required | Description |
+|---|---|---|---|
+| `amount` | float (≥ 1) | ✅ | Hearts of damage to deal (1 heart = 1 unit) |
+
+**Examples:**
+```
+.damage 5        # deal 5 hearts of fall damage
+.dmg 19          # one-shot yourself (20 HP max)
+```
+
+</Accordion>
+
+<Accordion title="xp — Add experience points or levels">
+
+**Command:** `xp`
+
+**Usage:** `.xp <amount[L]>`
+
+**Description:** Adds experience to the local player. If the amount ends with `L` (case-insensitive), it is treated as **experience levels** and calls `addLevels()`. Otherwise it calls `addExperience()` to add raw XP points.
+
+| Argument | Type | Required | Description |
+|---|---|---|---|
+| `amount` | int | ✅ | Amount of XP to add. Append `L` for levels (e.g. `30L`) |
+
+**Examples:**
+```
+.xp 1000          # add 1000 XP points
+.xp 30L           # add 30 experience levels
+```
+
+</Accordion>
+
+<Accordion title="friend — Manage the friendly player list">
+
+**Command:** `friend` · **Alias:** `friendlist`
+
+**Usage:** `.friend <add|remove> <playerName>`
+
+**Description:** Adds or removes players from Horion's internal friend list. Friends are excluded from targeting by combat modules (e.g. KillAura). The player must be in render distance for `add` to resolve their full name. The `remove` sub-command works by partial name match.
+
+| Argument | Type | Required | Description |
+|---|---|---|---|
+| `action` | `add` \| `remove` | ✅ | Whether to add or remove |
+| `playerName` | string | ✅ | Full or partial player name visible in the entity list |
+
+**Examples:**
+```
+.friend add Steve        # add Steve to friend list
+.friend remove Steve     # remove Steve from friend list
+.friendlist add xX_Pro   # using the alias
+```
+
+</Accordion>
+
+</AccordionGroup>
+
+---
+
+## Chat & Communication
+
+<AccordionGroup>
+
+<Accordion title="say — Send a raw chat message">
+
+**Command:** `say`
+
+**Usage:** `.say <message>`
+
+**Description:** Constructs a `C_TextPacket` and sends it directly to the server's loopback packet sender, bypassing Minecraft's normal chat input flow. Supports escape sequences: `\n` (newline), `\t` (tab), `\\` (literal backslash), `\"` (quote). All tokens after the command name are joined with spaces.
+
+| Argument | Type | Required | Description |
+|---|---|---|---|
+| `message` | string | ✅ | The message text to send (multi-word supported) |
+
+**Examples:**
+```
+.say Hello world!
+.say Line one\nLine two
+```
+
+</Accordion>
+
+<Accordion title="spammer — Configure the Spammer module">
+
+**Command:** `spammer` · **Alias:** `spam`
+
+**Usage:** `.spammer <message|delay|bypass|length|manual> <value>`
+
+**Description:** Configures the Spammer module's settings or sends manual spam messages. The `message` sub-command sets the text the spammer will send. `delay` sets the interval (in ticks). `bypass` enables or disables the anti-spam bypass (appends a random string). `length` sets the length of the bypass string. `manual` sends a message a specified number of times immediately.
+
+| Sub-command | Value | Description |
+|---|---|---|
+| `message` | string | Set the spam message text |
+| `delay` | int (≥ 1) | Set send interval in ticks |
+| `bypass` | `true`/`false` | Enable/disable anti-spam suffix |
+| `length` | int (≥ 1) | Length of the random bypass suffix |
+| `manual` | `<times> <text>` | Send `<text>` exactly `<times>` times right now |
+
+**Examples:**
+```
+.spammer message Hello everyone!
+.spam delay 20
+.spam bypass true
+.spam length 8
+.spam manual 5 Click my link!
+```
+
+</Accordion>
+
+<Accordion title="namespoof — Spoof your display name">
+
+**Command:** `namespoof` · **Aliases:** `ns`, `fakename`, `fn`
+
+**Usage:** `.namespoof <name|reset> [displayName]`
+
+**Description:** Sets a fake name that Horion sends to realms and BDS servers in place of your actual Xbox gamertag. Use the `name` sub-command followed by the desired display name. Use `reset` to clear the fake name and revert to your real username. A reconnect is required for the change to take effect on the server.
+
+| Argument | Type | Required | Description |
+|---|---|---|---|
+| `action` | `name` \| `reset` | ✅ | Set a new name or reset to real name |
+| `displayName` | string | ✅ with `name` | The fake display name to use |
+
+**Examples:**
+```
+.namespoof name Notch
+.ns name Cool Player 123
+.fn reset
+.namespoof reset
+```
+
+</Accordion>
+
+</AccordionGroup>
+
+---
+
+## Exploits & Scripts
+
+<AccordionGroup>
+
+<Accordion title="commandblockexploit — Execute server commands without op">
+
+**Command:** `commandblockexploit` · **Alias:** `cbe`
+
+**Usage:** `.commandblockexploit <beehive|beenest|movingblock|invisible|spoof> <command>`
+
+**Description:** Crafts a specially-tagged item using beehive/bee_nest/movingblock NBT structures that contain a command block minecart entity. When the item is placed in the world, the embedded command executes server-side without requiring operator status. Five exploit variants are provided for different server configurations and anti-cheat setups.
+
+| Variant | Short alias | Notes |
+|---|---|---|
+| `beehive` | `bh` | Uses a `minecraft:beehive` item wrapper |
+| `beenest` | `bn` | Uses a `minecraft:bee_nest` wrapper |
+| `movingblock` | `mb` | Uses a `minecraft:movingblock` piston structure |
+| `invisible` | `invis` | Moving block with air inner block (invisible) |
+| `spoof` | `sp` | Spoofed bee identifier variant |
+
+<Warning>
+  After the command runs, a new item appears in your inventory. **Place it on the ground** to trigger the embedded command. The item may look unusual — this is expected.
+</Warning>
+
+**Examples:**
+```
+.cbe beehive op @s
+.cbe bh give @s diamond 64
+.commandblockexploit invisible effect @a speed 999 255
+.cbe spoof gamemode creative @s
+```
+
+</Accordion>
+
+<Accordion title="execute — Run inline JavaScript code">
+
+**Command:** `execute` · **Alias:** `exec`
+
+**Usage:** `.execute <code>`
+
+**Description:** Passes the remainder of the command line to Horion's embedded JavaScript scripting engine and prints the return value in chat. All tokens after `execute` are joined back into a single string. Useful for quick one-liners without loading a full script file.
+
+| Argument | Type | Required | Description |
+|---|---|---|---|
+| `code` | string | ✅ | JavaScript expression or statement(s) to evaluate |
+
+**Examples:**
+```
+.execute 1 + 1
+.exec horion.getLocalPlayer().getHealth()
+.execute horion.displayClientMessage("Hello from JS!")
+```
+
+</Accordion>
+
+<Accordion title="script — Load or unload script folders">
+
+**Command:** `script`
+
+**Usage:** `.script <load|unloadall>`
+
+**Description:** Manages Horion's JavaScript scripting engine. `load` opens a folder-picker dialog (via the injector) that lets you select a folder of `.js` script files to import. `unloadall` unloads every currently-loaded script.
+
+| Sub-command | Description |
+|---|---|
+| `load` | Open a folder-picker dialog to import a `.js` script folder |
+| `unloadall` | Unload all currently active scripts |
+
+**Examples:**
+```
+.script load          # opens folder picker
+.script unloadall     # unload all scripts
+```
+
+</Accordion>
+
+</AccordionGroup>
+
+---
+
+## Miscellaneous
+
+<AccordionGroup>
+
+<Accordion title="bruh — Print a bruh moment">
+
+**Command:** `bruh`
+
+**Usage:** `.bruh`
+
+**Description:** Prints `"bruh moment"` to your client chat. This is a classic test/debug command that confirms Horion is running and the command system is functional.
+
+**Example:**
+```
+.bruh
+```
+
+</Accordion>
+
+<Accordion title="test — Internal debug command">
+
+**Command:** `test`
+
+**Usage:** `.test`
+
+**Description:** An internal debugging command that logs inventory slot info and swaps slots 1 and 2 in your inventory. Output goes to the Horion debug log rather than chat. Not intended for regular use — included here for completeness.
+
+**Example:**
+```
+.test
+```
+
+</Accordion>
+
+</AccordionGroup>

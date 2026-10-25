@@ -1,0 +1,271 @@
+---
+title: "Horion Player Modules: Inventory, Armor, and Utility"
+sidebarTitle: "Player"
+description: "Complete reference for Horion's player-utility modules covering inventory management, automatic armor equipping, totem automation, and quality-of-life improvements."
+---
+
+Horion's Player category groups together modules that improve your character management and quality of life without being purely combat- or movement-oriented. This includes automated inventory management, armor equipping, totem handling, eating speed, interaction tweaks, and anti-detection helpers. Most of these modules operate quietly in the background each game tick.
+
+---
+
+## AutoArmor
+
+Automatically equips the best available armor from your inventory into the appropriate armor slots each tick.
+
+**Tooltip:** *"AutoArmor"* · No configurable settings. Requires your crafting/inventory screen to be accessible.
+
+---
+
+## AutoGapple
+
+Automatically consumes a golden apple from your inventory when your health drops below a threshold.
+
+**Tooltip:** *"AutoGapple"* · No configurable settings. Monitors health each tick and triggers eating via the move input handler.
+
+---
+
+## AutoSneak
+
+Keeps your character in a permanent sneak state without requiring you to hold the sneak key.
+
+**Tooltip:** *"AutoSneak"*
+
+| Setting | Type | Default | Description |
+|---|---|---|---|
+| `doSilent` | bool | false | Apply sneak silently (server does not see sneak state) |
+
+---
+
+## AutoTotem
+
+Automatically moves a totem of undying from your inventory into your offhand slot, ensuring you always have one ready.
+
+**Tooltip:** *"AutoTotem"* · No configurable settings. Checks and corrects your offhand each tick.
+
+---
+
+## AutoSprint *(Player)*
+
+Keeps you sprinting continuously without needing to hold the sprint key. Identical functionality to the Movement category variant.
+
+**Tooltip:** *"AutoSprint"*
+
+| Setting | Type | Default | Description |
+|---|---|---|---|
+| `alldirections` | bool | true | Sprint in all directions, not just forward |
+
+<Note>
+  AutoSprint appears in the **Movement** category in the source (`Category::MOVEMENT`). It is documented here for completeness since it benefits player utility as well.
+</Note>
+
+---
+
+## InventoryCleaner
+
+Scans your inventory and automatically discards items it considers useless based on your configured keep-list preferences.
+
+**Tooltip:** *"Automatically throws not needed stuff out of your inventory"*
+
+| Setting | Type | Default | Description |
+|---|---|---|---|
+| `Tools` | bool | true | Keep tools (pickaxes, shovels, axes, etc.) |
+| `Armor` | bool | true | Keep armor pieces |
+| `Food` | bool | true | Keep food items |
+| `Blocks` | bool | true | Keep placeable blocks |
+| `OpenInv` | bool | true | Open your inventory screen if needed to perform the clean |
+| `AutoSort` | bool | false | Automatically sort inventory after cleaning |
+
+---
+
+## InventoryMove
+
+Allows you to move your character using WASD while the inventory screen is open.
+
+**Tooltip:** *"InventoryMove"* · No configurable settings.
+
+<Note>
+  InventoryMove is categorized under **Movement** in the source (`Category::MOVEMENT`).
+</Note>
+
+---
+
+## FastEat
+
+Speeds up the food eating animation and consumption rate so you restore hunger more quickly.
+
+**Tooltip:** *"FastEat"* · No configurable settings. Applies a tick override while eating.
+
+---
+
+## NoSlowDown *(Player)*
+
+Prevents the movement speed penalty applied when holding items such as bows, food, and shields.
+
+**Tooltip:** *"NoSlowDown"* · No configurable settings. Operates via memory patch (opcode override).
+
+<Note>
+  NoSlowDown is categorized under **Movement** in the source (`Category::MOVEMENT`).
+</Note>
+
+---
+
+## NoSwing
+
+Suppresses the arm-swing animation when you attack or use an item, hiding the visual tell from spectators.
+
+**Tooltip:** *"NoSwing"* · No configurable settings.
+
+---
+
+## NoHurtcam
+
+Disables the screen-shake effect that plays whenever your character takes damage.
+
+**Tooltip:** *"NoHurtcam"* · No configurable settings.
+
+<Note>
+  NoHurtcam is categorized under **Visual** in the source (`Category::VISUAL`).
+</Note>
+
+---
+
+## StackableItem
+
+Forces normally unstackable items (such as tools, weapons, and armor) to stack in your inventory.
+
+**Tooltip:** *"StackableItem"* · No configurable settings. Applied each tick while enabled.
+
+---
+
+## MidClick
+
+Binds an action to your middle mouse button, triggering interactions with entities or blocks on middle-click.
+
+**Tooltip:** *"MidClick"* · No configurable settings. Detects middle mouse presses each tick.
+
+---
+
+## Reach
+
+Extends your melee attack and block interaction distance beyond the default vanilla range.
+
+**Tooltip:** *"Increases your reach"*
+
+| Setting | Type | Default | Range | Description |
+|---|---|---|---|---|
+| `Reach Value` | float | 3.0 | 3.0 – 7.0 | Custom reach distance in blocks |
+
+<Note>
+  Reach is categorized under **Combat** in the source (`Category::COMBAT`).
+</Note>
+
+---
+
+## Hitbox
+
+Artificially enlarges the hitboxes of nearby entities, making them easier to click on and attack.
+
+**Tooltip:** *"Increase an entity's hitbox size"*
+
+| Setting | Type | Default | Range | Description |
+|---|---|---|---|---|
+| `Height` | float | 2.0 | 1.8 – 10 | Expanded hitbox height in blocks |
+| `Width` | float | 4.0 | 0.6 – 10 | Expanded hitbox width in blocks |
+
+<Note>
+  Hitbox is categorized under **Combat** in the source (`Category::COMBAT`).
+</Note>
+
+---
+
+## EditionFaker
+
+Spoofs the Minecraft edition reported to the server, allowing a Bedrock client to appear as a different edition to the server.
+
+**Tooltip:** *"EditionFaker"*
+
+| Setting | Type | Default | Description |
+|---|---|---|---|
+| *(no registered settings)* | — | — | Edition is determined internally via `getFakedEdition()` |
+
+<Note>
+  EditionFaker is categorized under **Misc** in the source (`Category::MISC`).
+</Note>
+
+---
+
+## AntiImmobile
+
+Prevents the server from flagging your client as immobile or "frozen," keeping movement packets flowing normally.
+
+**Tooltip:** *"AntiImmobile"* · No configurable settings.
+
+<Note>
+  AntiImmobile is categorized under **Misc** in the source (`Category::MISC`).
+</Note>
+
+---
+
+## AntiBot
+
+Filters out bot entities from being targeted by combat modules, using multiple detection heuristics.
+
+**Tooltip:** *"Enable this module to filter bots!"*
+
+| Setting | Type | Default | Description |
+|---|---|---|---|
+| `Hitbox Check` | bool | true | Ignore entities with zero-size hitboxes |
+| `Invisible Check` | bool | true | Ignore invisible entities |
+| `EntityID Check` | bool | true | Ignore entities with unusual ID patterns |
+| `Other Check` | bool | true | Apply miscellaneous heuristic checks |
+| `Extra Check` | bool | false | Enable experimental additional detection logic |
+
+---
+
+## ChestAura
+
+Automatically opens nearby chest containers by sending interaction packets without requiring you to click on them manually.
+
+**Tooltip:** *"Aura for opening chests"*
+
+| Setting | Type | Default | Range | Description |
+|---|---|---|---|---|
+| `Range` | int | 3 | 1 – 10 | Radius in blocks to scan for chests |
+| `EnderChests` | bool | false | — | Also interact with ender chests |
+
+---
+
+## ChestStealer
+
+When a chest is open, automatically transfers all items from the chest into your inventory.
+
+**Tooltip:** *"Automatically takes all items out of a chest"*
+
+| Setting | Type | Default | Range | Description |
+|---|---|---|---|---|
+| `Close Delay` | int | 7 | 0 – 20 | Ticks to wait after stealing before closing the chest |
+| `enhanced` | bool | true | — | Use enhanced packet-level transfer instead of simulated clicks |
+
+---
+
+## ExtendedBlockReach
+
+Increases the maximum distance at which you can place and break blocks.
+
+**Tooltip:** *"Extended reach for placing/breaking blocks"*
+
+| Setting | Type | Default | Range | Description |
+|---|---|---|---|---|
+| `reach` | float | 7.0 | 7.0 – 20.0 | Maximum block interaction range in blocks |
+
+---
+
+## Nbt
+
+Reads NBT (Named Binary Tag) data from blocks you look at and copies it to your clipboard.
+
+**Tooltip:** *"Nbt"* · No configurable settings. Runs each tick and copies new NBT data when the pointed-at block changes.
+
+<Note>
+  Nbt is categorized under **Player** in the source (`Category::PLAYER`).
+</Note>

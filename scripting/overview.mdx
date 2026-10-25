@@ -1,0 +1,96 @@
+---
+title: "JavaScript Scripting in Horion Using the Chakra Engine"
+sidebarTitle: "Overview"
+description: "Use Horion's Chakra-powered JavaScript scripting to create custom modules, hook into game events, and interact with players, entities, and the world."
+---
+
+Horion embeds Microsoft's **ChakraCore** JavaScript engine, giving you a full ES6-compatible scripting environment that runs inside Minecraft: Bedrock Edition. Scripts can register custom modules that appear in the ClickGUI, respond to game events like ticks and renders, read and manipulate the local player's state, query entities, interact with the inventory, draw overlays, and execute Horion commands — all from plain `.js` files on disk.
+
+## How scripts are loaded
+
+Scripts are organised as **folders**, not individual files. Each script folder must contain a file named `start.js` which acts as the entry point. When you load a script, Horion scans the folder for `start.js` and spins up a dedicated `ScriptInstance` thread that owns its own Chakra runtime. All API objects (`Game`, `Horion`, `Vec3`, `Vec2`, `log`, …) are injected into the global scope of that runtime before `start.js` begins executing.
+
+<Note>
+The global API objects are capitalised: **`Game`**, **`Horion`**, **`Vec3`**, and **`Vec2`**. Using lower-case names will result in a `ReferenceError`.
+</Note>
+
+### Script commands
+
+| Command | Description |
+|---|---|
+| `.script load <folder-path>` | Load a script folder (must contain `start.js`) |
+| `.script unload <folder-path>` | Unload a script by its folder path |
+| `.script list` | List all currently loaded scripts |
+
+**Example:**
+```
+.script load C:\horion-scripts\my-module
+```
+
+## Script lifecycle
+
+Every script goes through the following stages:
+
+<Steps>
+  <Step title="Write start.js">
+    Create a folder for your script and add a `start.js` file. All code and any helper files live inside this folder.
+  </Step>
+  <Step title="Load with .script load">
+    Run `.script load <path-to-folder>` in the Horion chat. Horion locates `start.js`, creates a new `ScriptInstance`, injects all API globals, and begins executing your script on its own thread.
+  </Step>
+  <Step title="Register modules and callbacks">
+    Inside `start.js`, call `Horion.getModuleManager().registerModule("ModuleName")` to create a new module, then attach event callbacks with `module.registerCallback("onTick", fn)`. Valid callback events are `onTick`, `onEnable`, `onDisable`, `onAttack`, `onRender`, and `onRender2d`.
+  </Step>
+  <Step title="Toggle the module in the ClickGUI">
+    Your custom module now appears in Horion's ClickGUI under the category you chose. Toggle it on or off just like any built-in module. When enabled, Horion invokes your registered callbacks at the appropriate game events.
+  </Step>
+</Steps>
+
+## What scripts can do
+
+<CardGroup cols={2}>
+  <Card title="Custom modules" icon="puzzle-piece">
+    Register new modules that appear in the ClickGUI. Respond to ticks, renders, enable/disable, and attack events.
+  </Card>
+  <Card title="Player control" icon="person-running">
+    Set the local player's position, velocity, view angles, and ground state. Break or place blocks by world or relative coordinates.
+  </Card>
+  <Card title="Entity queries" icon="eye">
+    Enumerate all entities or only targetable ones. Read position, velocity, view angles, size, and environmental state flags.
+  </Card>
+  <Card title="HUD overlays" icon="paintbrush">
+    Draw 2D/3D lines, rectangles, filled shapes, and text directly onto the game screen using `DrawUtils`.
+  </Card>
+  <Card title="Inventory access" icon="backpack">
+    Inspect items, armor, and the held item. Move items between slots and change the selected hotbar slot.
+  </Card>
+  <Card title="Command execution" icon="terminal">
+    Execute any Horion chat command programmatically with `CommandManager.executeCommand()`.
+  </Card>
+</CardGroup>
+
+## Execution model
+
+Each script runs on its **own dedicated thread**. When a game event fires (such as a tick or render), Horion dispatches a callback invocation into the script's callback queue. The script thread drains the queue and executes callbacks one at a time. This means:
+
+- JavaScript execution is always single-threaded per script.
+- Callbacks are executed from Horion's internal game thread dispatcher, so long-running callbacks will block the next event.
+- There is no native `setTimeout`/`setInterval`; use the `onTick` callback for periodic work.
+
+<Warning>
+Do **not** perform blocking I/O or long synchronous loops inside callbacks. All callbacks share the same script thread and a slow callback will delay every subsequent event.
+</Warning>
+
+## Memory limit
+
+Each script runtime is capped at **50 MB** of heap memory. Exceeding this limit throws a JavaScript out-of-memory error and terminates the script.
+
+## Available globals at a glance
+
+| Global | Description |
+|---|---|
+| `Game` | Access the local player, level, and client info |
+| `Horion` | Access `ModuleManager`, `CommandManager`, and `DrawUtils` |
+| `Vec3(x, y, z)` | Construct a 3-component vector |
+| `Vec2(x, y)` | Construct a 2-component vector |
+| `log(msg)` | Print a message to the Horion console |
