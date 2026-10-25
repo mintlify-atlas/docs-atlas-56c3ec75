@@ -4,7 +4,7 @@ sidebarTitle: "Overview"
 description: "Learn how to use Horion's in-game command system: prefix, syntax, aliases, arguments, and tips for running commands in Minecraft Bedrock Edition."
 ---
 
-Horion ships with a built-in command system that lets you control every part of the client without ever leaving Minecraft's chat box. Commands are fast, tab-friendly, and cover everything from toggling modules and managing configs to teleporting across the map and manipulating inventory items — all without requiring server-side operator permissions.
+Horion ships with a built-in command system that lets you control every part of the client without ever leaving Minecraft's chat box. Commands are fast and cover everything from toggling modules and managing configs to teleporting across the map and manipulating inventory items — all without requiring server-side operator permissions.
 
 ## Opening the Chat
 
@@ -44,15 +44,9 @@ Run `.help` with no arguments to print every registered command along with its o
 .help
 ```
 
-To see the usage string for a specific command, pass its name as the first argument:
-
-```
-.help bind
-.help tp
-.help enchant
-```
-
-The usage string shows the expected arguments in angle-bracket (`<required>`) and square-bracket (`[optional]`) notation.
+<Note>
+  The `.help` command prints the full list of all commands — it does not accept a command name argument to look up individual usage. To see a command's usage string, run the command with no arguments and Horion will print the usage error automatically.
+</Note>
 
 ## Command Reference Table
 
@@ -65,7 +59,7 @@ The table below lists every built-in command name, its alias(es), and a brief de
 | `toggle` | `t` | Toggle a module on or off |
 | `config` | — | Load, create, or save a named config profile |
 | `setprefix` | `prefix` | Change the single-character command prefix |
-| `help` | `h` | List all commands or show usage for one command |
+| `help` | `h` | List all registered commands with descriptions |
 | `modules` | `mods` | Print all available modules with descriptions |
 | `hide` | — | Toggle visibility of the Horion HUD overlay |
 | `friend` | `friendlist` | Add or remove players from your friend list |
@@ -79,7 +73,7 @@ The table below lists every built-in command name, its alias(es), and a brief de
 | `give` | — | Spawn items into your inventory |
 | `enchant` | — | Apply enchantments to the item in your main hand |
 | `gamemode` | `gm` | Change your client-side game mode (0/1/2) |
-| `damage` | `dmg` | Deal fall-damage to yourself |
+| `damage` | `dmg` | Deal fall damage to yourself |
 | `xp` | — | Add experience points or levels to your player |
 | `say` | — | Send a raw chat message directly to the server |
 | `spammer` | `spam` | Configure the Spammer module message and delay |
@@ -94,18 +88,21 @@ The table below lists every built-in command name, its alias(es), and a brief de
 | `top` | — | Teleport upward to the nearest open air pocket |
 | `script` | — | Load a script folder or unload all loaded scripts |
 | `bruh` | — | Prints "bruh moment" — a classic debug/test command |
-| `test` | — | Internal debug command (swap inventory slots 1 & 2) |
+
+<Note>
+  The `test` command exists in the source but is only compiled into **debug builds** of Horion (`#ifdef _DEBUG`). It is not available in release builds and is excluded from this table.
+</Note>
 
 ## Using Aliases
 
-Most commands register one or more shorter aliases that work identically to the full command name. For example, these three lines do exactly the same thing:
+Most commands register one or more shorter aliases that work identically to the full command name. For example, these two lines do exactly the same thing:
 
 ```
 .toggle killaura
 .t killaura
 ```
 
-Aliases are always lowercase. Use `.help` to see which alias belongs to which command.
+Aliases are always lowercase. Use `.help` to see the full list of commands.
 
 ## Passing Arguments
 

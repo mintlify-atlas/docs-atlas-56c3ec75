@@ -39,7 +39,7 @@ class IMCCommand {
 private:
     const char* _command;      // Primary command name (lower-case, no prefix)
     const char* _description;  // One-line description shown by .help
-    const char* _usage;        // Usage string shown by .help <command>
+    const char* _usage;        // Usage string shown on invalid input
     std::vector<std::string> aliasList;
 
 protected:
@@ -77,7 +77,7 @@ The constructor takes all three identity strings at once, so a minimal command n
     Short description displayed by `.help` when listing all commands.
   </Card>
   <Card title="getUsage(alias)" icon="book">
-    Usage string displayed when `execute` returns `false` or when the user runs `.help <command>`. The `alias` parameter lets you return alias-specific syntax strings.
+    Usage string displayed when `execute` returns `false` or throws. The `alias` parameter lets you return alias-specific syntax strings.
   </Card>
 </CardGroup>
 
@@ -108,13 +108,13 @@ A command can respond to multiple names by calling `registerAlias` from its cons
 
 ```cpp
 MyCommand::MyCommand()
-    : IMCCommand("mycommand", "Does something useful", ".mycommand <arg>") {
+    : IMCCommand("mycommand", "Does something useful", "<arg>") {
     registerAlias("mc");
     registerAlias("mycmd");
 }
 ```
 
-`CommandMgr` checks both the primary name and every entry in `aliasList` when matching input, so `.mc <arg>`, `.mycmd <arg>`, and `.mycommand <arg>` are all equivalent.
+`CommandMgr` checks every entry in `aliasList` when matching input (the primary name is also added as an alias automatically), so `.mc <arg>`, `.mycmd <arg>`, and `.mycommand <arg>` are all equivalent.
 
 ## Sending Feedback to the Client
 
@@ -125,9 +125,9 @@ clientMessageF("Loaded config: %s", name.c_str());
 clientMessageF("Value must be between %d and %d", min, max);
 ```
 
-<Info>
-Messages sent through `clientMessageF` appear only in your local chat window. They use the same colour-code system as the rest of Horion's UI (`%sGOLD%s`, `%sGREEN%s`, etc.).
-</Info>
+<Note>
+Messages sent through `clientMessageF` appear only in your local chat window. They use the same colour-code system as the rest of Horion's UI (`GOLD`, `GREEN`, `RED`, `GRAY`, etc.).
+</Note>
 
 ## Creating a Custom Command
 
@@ -136,7 +136,7 @@ Implement a command by inheriting `IMCCommand`, calling the three-argument const
 ```cpp
 class MyCommand : public IMCCommand {
 public:
-    MyCommand() : IMCCommand("mycommand", "Does something", ".mycommand <arg>") {}
+    MyCommand() : IMCCommand("mycommand", "Does something", "<arg>") {}
     
     bool execute(std::vector<std::string>* args) override {
         if (args->size() < 2) return false;
@@ -154,17 +154,17 @@ Horion ships with a full set of built-in commands registered by `CommandMgr::ini
 
 | Command | Purpose |
 |---|---|
-| `.help [command]` | List all commands, or show usage for one |
+| `.help` | List all registered commands and their one-line descriptions |
 | `.toggle <module>` | Enable or disable a module by name |
 | `.bind <module> <key>` | Assign a keybind to a module |
-| `.config <save\|load\|list> [name]` | Manage config profiles |
-| `.friend <add\|remove\|list> [name]` | Manage the friend list |
+| `.config <save\|load\|new> [name]` | Manage config profiles |
+| `.friend <add\|remove> <name>` | Manage the friend list |
 | `.setprefix <char>` | Change the command prefix |
 | `.modules` | List all modules and their enabled state |
 | `.tp <x> <y> <z>` | Teleport to coordinates |
 
 <Tip>
-Run `.help` with no arguments for a live list of every registered command and its one-line description. Run `.help <command>` to see the full usage string for a specific command.
+Run `.help` for a live list of every registered command and its one-line description.
 </Tip>
 
 ## The `CommandMgr` Singleton

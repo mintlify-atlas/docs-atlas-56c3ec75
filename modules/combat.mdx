@@ -59,7 +59,7 @@ Leads your aim to account for arrow travel time when shooting a bow.
 
 | Setting | Type | Default | Description |
 |---|---|---|---|
-| `silent` | bool | true | Apply aim correction silently via packets |
+| `silent` | bool | false | Apply aim correction silently via packets |
 | `predict` | bool | false | Enable arrow trajectory prediction |
 | `visualize` | bool | false | Render a predicted arc overlay |
 
@@ -69,11 +69,10 @@ Leads your aim to account for arrow travel time when shooting a bow.
 
 Automatically attacks when your crosshair is directly over a valid entity.
 
-**Tooltip:** *"Attacks entities around you automatically"*
+**Tooltip:** *"Attacks entities you're looking at"*
 
 | Setting | Type | Default | Range | Description |
 |---|---|---|---|---|
-| `sword` | bool | true | — | Only trigger when holding a sword or axe |
 | `delay` | int | 0 | 0 – 20 | Ticks between trigger attacks |
 
 ---
@@ -82,13 +81,13 @@ Automatically attacks when your crosshair is directly over a valid entity.
 
 Simulates mouse clicks automatically, removing the need to physically click.
 
-**Tooltip:** *"A simple autoclicker, automatically clicks for you"*
+**Tooltip:** *"A simple autoclicker, automatically clicks for you."*
 
 | Setting | Type | Default | Range | Description |
 |---|---|---|---|---|
 | `rightclick` | bool | false | — | Auto right-click instead of left-click |
-| `only weapons` | bool | true | — | Restrict auto-clicking to weapon/tool items |
-| `break blocks` | bool | true | — | Allow clicking while breaking blocks |
+| `only weapons` | bool | false | — | Restrict auto-clicking to weapon/tool items |
+| `break blocks` | bool | false | — | Allow clicking while breaking blocks |
 | `delay` | int | 0 | 0 – 20 | Ticks between simulated clicks |
 | `hold` | bool | false | — | Hold the click button rather than toggling |
 
@@ -118,28 +117,11 @@ Places end crystals on obsidian/bedrock and immediately destroys them to deal bu
 
 Forces every melee hit to register as a critical hit by spoofing the player's fall state in the outgoing packet.
 
-**Tooltip:** *"Criticals"* · No configurable settings.
+**Tooltip:** *"Each hit is a critical hit"* · No configurable settings.
 
 <Tip>
   Criticals works at the packet level and does not require you to actually jump — it silently modifies `MovePlayerPacket` data to flag the hit as airborne.
 </Tip>
-
----
-
-## Velocity
-
-Reduces or eliminates knockback received from enemy hits by modifying incoming velocity values.
-
-**Tooltip:** *"Don't ever take knockback again"*
-
-| Setting | Type | Default | Range | Description |
-|---|---|---|---|---|
-| `Linear Modifier` | float | 0.0 | 0.0 – 1.0 | Horizontal knockback multiplier (0 = none) |
-| `Height Modifier` | float | 0.0 | 0.0 – 1.0 | Vertical knockback multiplier (0 = none) |
-
-<Note>
-  Velocity is categorized under **Movement** in the source (`Category::MOVEMENT`), but it is functionally a combat utility used to survive in PvP.
-</Note>
 
 ---
 
@@ -161,12 +143,12 @@ A kill aura variant that operates at extreme ranges far beyond normal interactio
 
 Expands the hitbox size of nearby entities, making them significantly easier to hit.
 
-**Tooltip:** *"Increase an entity's hitbox size"*
+**Tooltip:** *"Increase an entitys hitbox size"*
 
 | Setting | Type | Default | Range | Description |
 |---|---|---|---|---|
-| `Height` | float | 2.0 | 1.8 – 10 | Hitbox height multiplier |
-| `Width` | float | 4.0 | 0.6 – 10 | Hitbox width multiplier |
+| `Height` | float | 1.8 | 1.8 – 10 | Hitbox height in blocks |
+| `Width` | float | 0.6 | 0.6 – 10 | Hitbox width in blocks |
 
 ---
 
@@ -195,24 +177,4 @@ Prevents combat modules from attacking teammates, identified by name color or al
 
 <Note>
   Teams integrates with KillAura, InfiniteAura, and other targeting modules. Enable it whenever you're playing on a team-based server.
-</Note>
-
----
-
-## AntiBot
-
-Filters out bot entities so that combat modules do not waste attacks on them.
-
-**Tooltip:** *"Enable this module to filter bots!"*
-
-| Setting | Type | Default | Description |
-|---|---|---|---|
-| `Hitbox Check` | bool | true | Ignore entities with zero-size hitboxes |
-| `Invisible Check` | bool | true | Ignore invisible entities |
-| `EntityID Check` | bool | true | Ignore entities with suspicious ID patterns |
-| `Other Check` | bool | true | Apply additional heuristic bot checks |
-| `Extra Check` | bool | false | Enable experimental extra bot detection |
-
-<Note>
-  AntiBot is categorized under **Player** in the source (`Category::PLAYER`), but it directly affects combat module targeting behavior.
 </Note>

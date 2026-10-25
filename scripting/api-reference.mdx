@@ -68,7 +68,7 @@ Obtained via `Game.getLocalPlayer()`. Inherits all **Entity** methods and adds t
 
     ```javascript
     var player = Game.getLocalPlayer();
-    player.setPosition(new Vec3(0, 64, 0));
+    player.setPosition(Vec3(0, 64, 0));
     // or: player.setPosition(0, 64, 0);
     ```
   </Accordion>
@@ -80,18 +80,18 @@ Obtained via `Game.getLocalPlayer()`. Inherits all **Entity** methods and adds t
     **Returns:** `true`
 
     ```javascript
-    player.setVelocity(new Vec3(0, 0.5, 0)); // small upward boost
+    player.setVelocity(Vec3(0, 0.5, 0)); // small upward boost
     ```
   </Accordion>
 
   <Accordion title="localPlayer.setViewAngles(vec3)">
-    Sets the player's view angles. The `x` component is treated as **yaw** and `y` as **pitch**. Internally calls `applyTurnDelta` so the change is smooth.
+    Sets the player's view angles. The `x` component is treated as **yaw** and `y` as **pitch**. Internally calls `applyTurnDelta` so the change is applied as a delta from the current angles.
 
     **Parameters:** `Vec3 | (number yaw, number pitch, number _ignored)`  
     **Returns:** `true`
 
     ```javascript
-    player.setViewAngles(new Vec3(90, 0, 0)); // face east
+    player.setViewAngles(Vec3(90, 0, 0)); // face east
     ```
   </Accordion>
 
@@ -113,7 +113,7 @@ Obtained via `Game.getLocalPlayer()`. Inherits all **Entity** methods and adds t
 
     ```javascript
     var inv = player.getInventory();
-    log("Held: " + JSON.stringify(inv.getHeld()));
+    log("Held: " + JSON.stringify(inv.getSlot()));
     ```
   </Accordion>
 
@@ -124,7 +124,7 @@ Obtained via `Game.getLocalPlayer()`. Inherits all **Entity** methods and adds t
     **Returns:** `true`
 
     ```javascript
-    player.breakBlock(new Vec3(10, 63, 10));
+    player.breakBlock(Vec3(10, 63, 10));
     ```
   </Accordion>
 
@@ -135,7 +135,7 @@ Obtained via `Game.getLocalPlayer()`. Inherits all **Entity** methods and adds t
     **Returns:** `true`
 
     ```javascript
-    player.placeBlock(new Vec3(10, 63, 10));
+    player.placeBlock(Vec3(10, 63, 10));
     ```
   </Accordion>
 
@@ -146,7 +146,7 @@ Obtained via `Game.getLocalPlayer()`. Inherits all **Entity** methods and adds t
     **Returns:** `true`
 
     ```javascript
-    player.breakBlockRelative(new Vec3(1, 0, 0)); // break block 1 unit to the east
+    player.breakBlockRelative(Vec3(1, 0, 0)); // break block 1 unit to the east
     ```
   </Accordion>
 
@@ -157,7 +157,7 @@ Obtained via `Game.getLocalPlayer()`. Inherits all **Entity** methods and adds t
     **Returns:** `true`
 
     ```javascript
-    player.placeBlockRelative(new Vec3(0, -1, 0)); // place block beneath player
+    player.placeBlockRelative(Vec3(0, -1, 0)); // place block beneath player
     ```
   </Accordion>
 </AccordionGroup>
@@ -307,7 +307,7 @@ Obtained via `Game.getLevel()`. Represents the current game world.
     **Returns:** `{ name: string, tileName: string, blockId: number }`
 
     ```javascript
-    var block = Game.getLevel().getBlock(new Vec3(0, 63, 0));
+    var block = Game.getLevel().getBlock(Vec3(0, 63, 0));
     log(block.name + " (id=" + block.blockId + ")");
     ```
   </Accordion>
@@ -339,27 +339,37 @@ Obtained via `localPlayer.getInventory()`. Provides access to the player's item 
     **Returns:** `Array<{ name: string, id: number, amount: number }>`
   </Accordion>
 
-  <Accordion title="inventory.getHeld()">
-    Returns the item in the currently selected hotbar slot.
+  <Accordion title="inventory.getHeld(slot)">
+    Returns the item at the given inventory slot index.
 
-    **Returns:** `{ name: string, id: number, amount: number }`
-  </Accordion>
-
-  <Accordion title="inventory.getSlot(index)">
-    Returns the item at a specific inventory slot index.
-
-    **Parameters:** `number index`  
+    **Parameters:** `number slot`  
     **Returns:** `{ name: string, id: number, amount: number }`
 
     ```javascript
-    var slot5 = inv.getSlot(5);
+    var item = inv.getHeld(3); // item in slot 3
+    log(item.name);
+    ```
+  </Accordion>
+
+  <Accordion title="inventory.getSlot()">
+    Returns the item in the **currently selected** hotbar slot. Takes no arguments.
+
+    **Returns:** `{ name: string, id: number, amount: number }`
+
+    ```javascript
+    var held = inv.getSlot();
+    log("Held: " + held.name + " x" + held.amount);
     ```
   </Accordion>
 
   <Accordion title="inventory.moveItem(from, to)">
-    Moves an item from one slot index to another.
+    Moves an item from one slot index to another by swapping the two slots.
 
     **Parameters:** `number from, number to`
+
+    ```javascript
+    inv.moveItem(0, 9); // swap hotbar slot 0 with slot 9
+    ```
   </Accordion>
 
   <Accordion title="inventory.setSelected(slot)">
@@ -514,12 +524,13 @@ Obtained via `Horion.getCommandManager()`.
 
 <AccordionGroup>
   <Accordion title="commandManager.executeCommand(cmd)">
-    Executes a Horion command string exactly as if you had typed it in chat.
+    Executes a Horion command. Pass the command **without** a leading dot — the dot is prepended automatically by the engine.
 
     **Parameters:** `string cmd`
 
     ```javascript
-    Horion.getCommandManager().executeCommand(".panic");
+    // Correct — executes ".panic" in-game
+    Horion.getCommandManager().executeCommand("panic");
     ```
   </Accordion>
 </AccordionGroup>
@@ -552,7 +563,7 @@ Calling draw functions outside of a render callback produces undefined behaviour
     **Parameters:** `Vec3 start, Vec3 end`
 
     ```javascript
-    draw.drawLine3d(new Vec3(0,64,0), new Vec3(10,64,10));
+    draw.drawLine3d(Vec3(0,64,0), Vec3(10,64,10));
     ```
   </Accordion>
 
@@ -563,9 +574,9 @@ Calling draw functions outside of a render callback produces undefined behaviour
 
     ```javascript
     draw.drawLinestrip3d([
-        new Vec3(0, 64, 0),
-        new Vec3(5, 65, 5),
-        new Vec3(10, 64, 10)
+        Vec3(0, 64, 0),
+        Vec3(5, 65, 5),
+        Vec3(10, 64, 10)
     ]);
     ```
   </Accordion>
@@ -576,7 +587,7 @@ Calling draw functions outside of a render callback produces undefined behaviour
     **Parameters:** `Vec2 start, Vec2 end [, number lineWidth]`
 
     ```javascript
-    draw.drawLine2d(new Vec2(10, 10), new Vec2(100, 100));
+    draw.drawLine2d(Vec2(10, 10), Vec2(100, 100));
     ```
   </Accordion>
 
@@ -586,7 +597,7 @@ Calling draw functions outside of a render callback produces undefined behaviour
     **Parameters:** `Vec2 corner1, Vec2 corner2 [, number lineWidth]`
 
     ```javascript
-    draw.drawRectangle2d(new Vec2(50, 50), new Vec2(150, 100));
+    draw.drawRectangle2d(Vec2(50, 50), Vec2(150, 100));
     ```
   </Accordion>
 
@@ -596,7 +607,7 @@ Calling draw functions outside of a render callback produces undefined behaviour
     **Parameters:** `Vec2 corner1, Vec2 corner2`
 
     ```javascript
-    draw.fillRectangle2d(new Vec2(50, 50), new Vec2(150, 100));
+    draw.fillRectangle2d(Vec2(50, 50), Vec2(150, 100));
     ```
   </Accordion>
 
@@ -607,8 +618,8 @@ Calling draw functions outside of a render callback produces undefined behaviour
 
     ```javascript
     draw.setColor(1, 1, 1, 1);
-    draw.drawText2d("Hello!", new Vec2(10, 10));
-    draw.drawText2d("Big red", new Vec2(10, 30), 1.5, new Vec3(1, 0, 0), 1);
+    draw.drawText2d("Hello!", Vec2(10, 10));
+    draw.drawText2d("Big red", Vec2(10, 30), 1.5, Vec3(1, 0, 0), 1);
     ```
   </Accordion>
 
@@ -658,7 +669,7 @@ Calling draw functions outside of a render callback produces undefined behaviour
 
 ## Vec3
 
-A three-component float vector. Constructed with `new Vec3(x, y, z)`.
+A three-component float vector. Constructed with `Vec3(x, y, z)`.
 
 <AccordionGroup>
   <Accordion title="Properties and methods">
@@ -678,8 +689,8 @@ A three-component float vector. Constructed with `new Vec3(x, y, z)`.
     | `vec3.toString()` | `string` | Human-readable representation |
 
     ```javascript
-    var a = new Vec3(1, 2, 3);
-    var b = new Vec3(4, 5, 6);
+    var a = Vec3(1, 2, 3);
+    var b = Vec3(4, 5, 6);
     var c = a.add(b); // Vec3(5, 7, 9)
     log(a.x); // 1
     ```
@@ -690,7 +701,7 @@ A three-component float vector. Constructed with `new Vec3(x, y, z)`.
 
 ## Vec2
 
-A two-component float vector. Constructed with `new Vec2(x, y)`.
+A two-component float vector. Constructed with `Vec2(x, y)`.
 
 <AccordionGroup>
   <Accordion title="Properties and methods">
@@ -708,7 +719,7 @@ A two-component float vector. Constructed with `new Vec2(x, y)`.
     | `vec2.toString()` | `string` | Human-readable representation |
 
     ```javascript
-    var screenCenter = new Vec2(960, 540);
+    var screenCenter = Vec2(960, 540);
     ```
   </Accordion>
 </AccordionGroup>

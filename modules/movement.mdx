@@ -4,7 +4,7 @@ sidebarTitle: "Movement"
 description: "Full reference for Horion's movement modules, including flight, speed boosts, bunny hopping, wall climbing, scaffolding, and advanced traversal in MCBE."
 ---
 
-Horion's Movement category is the largest in the client, covering everything from basic flight and speed to advanced mechanics like wall-climbing, air jumping, block placement beneath your feet, and freezing mid-air. Whether you need to traverse a large map quickly or outmaneuver opponents in PvP, these modules give you precise control over how your character moves through the world.
+Horion's Movement category is the largest in the client, covering everything from basic flight and speed to advanced mechanics like wall-climbing, air jumping, and freezing mid-air. Whether you need to traverse a large map quickly or outmaneuver opponents in PvP, these modules give you precise control over how your character moves through the world.
 
 <Warning>
   Many movement modules are highly visible to server anticheat systems. Use them carefully on servers with active moderation.
@@ -57,7 +57,7 @@ Automatically jumps at the optimal moment to maintain sprinting speed and moment
 
 Allows you to move through solid blocks by disabling collision detection.
 
-**Tooltip:** *"Phase through blocks"* · No configurable settings.
+**Tooltip:** *"Walk through walls"* · Default keybind: **I** · No configurable settings.
 
 <Warning>
   Phase can cause you to fall through the world if misused. Toggle it off before dismounting into air.
@@ -69,7 +69,7 @@ Allows you to move through solid blocks by disabling collision detection.
 
 Prevents fall damage by spoofing the `onGround` flag in outgoing `MovePlayerPacket`s so the server never registers a landing.
 
-**Tooltip:** *"NoFall"* · No configurable settings.
+**Tooltip:** *"Prevents you from taking falldamage"* · Default keybind: **Numpad 3** · No configurable settings.
 
 ---
 
@@ -138,7 +138,7 @@ Dramatically reduces your downward velocity to make you fall very slowly, like a
 
 Allows you to walk on the surface of water without sinking.
 
-**Tooltip:** *"Jesus"* · No configurable settings.
+**Tooltip:** *"Walk over water, like Jesus"* · No configurable settings.
 
 ---
 
@@ -159,11 +159,35 @@ Continuously propels you upward as if wearing a jetpack, using packet-based vert
 
 Keeps you sprinting at all times without needing to double-tap or hold the sprint key.
 
-**Tooltip:** *"AutoSprint"*
+**Tooltip:** *"Automatically sprint without holding the key"*
 
 | Setting | Type | Default | Description |
 |---|---|---|---|
-| `alldirections` | bool | true | Sprint in all directions, not just forward |
+| `all directions` | bool | false | Sprint in all directions, not just forward |
+
+---
+
+## AutoSneak
+
+Keeps your character in a permanent sneak state without requiring you to hold the sneak key.
+
+**Tooltip:** *"Automatically sneak without holding the key"*
+
+| Setting | Type | Default | Description |
+|---|---|---|---|
+| `silent` | bool | false | Apply sneak silently (server does not see sneak state) |
+
+---
+
+## AutoGapple
+
+Automatically consumes a golden apple from your inventory when your health drops below a configurable threshold.
+
+**Tooltip:** *"Auto eat gapples if you're low health"*
+
+| Setting | Type | Default | Range | Description |
+|---|---|---|---|---|
+| `health` | int | 10 | 1 – 20 | Health level (in half-hearts) below which a golden apple is consumed |
 
 ---
 
@@ -171,7 +195,15 @@ Keeps you sprinting at all times without needing to double-tap or hold the sprin
 
 Lets you perform swimming animations and movement while in open air, bypassing certain gravity checks.
 
-**Tooltip:** *"AirSwim"* · No configurable settings.
+**Tooltip:** *"Swim even though your in air"* · No configurable settings.
+
+---
+
+## AirStuck
+
+Freezes your position completely in mid-air by sending repeated static position packets to the server.
+
+**Tooltip:** *"Become stuck."* · No configurable settings.
 
 ---
 
@@ -196,47 +228,6 @@ A specialized gliding module designed for CubeCraft-style elytra bypass, using p
 | Setting | Type | Default | Range | Description |
 |---|---|---|---|---|
 | `Speed` | float | 1.5 | 1.0 – 3.0 | Forward glide speed per tick |
-
----
-
-## AirStuck
-
-Freezes your position completely in mid-air by sending repeated static position packets to the server.
-
-**Tooltip:** *"AirStuck"* · No configurable settings.
-
----
-
-## Tower
-
-Places blocks beneath you while you jump to rapidly build a tower straight up.
-
-**Tooltip:** *"Like scaffold, but vertically and a lot faster"*
-
-| Setting | Type | Default | Range | Description |
-|---|---|---|---|---|
-| `motion` | float | 0.5 | 0.3 – 1.0 | Upward motion applied per block placement cycle |
-
-<Note>
-  Tower is categorized under **World** in the source (`Category::WORLD`). You must be holding a placeable block in your hand.
-</Note>
-
----
-
-## Scaffold
-
-Automatically places blocks beneath your feet as you walk, preventing you from falling off edges.
-
-**Tooltip:** *"Automatically build blocks beneath you"* · Default keybind: **Numpad 1**
-
-| Setting | Type | Default | Description |
-|---|---|---|---|
-| `Spoof` | bool | false | Silently switch to a block item in your hotbar without visually changing your hand |
-| `Staircase Mode` | bool | false | Place blocks in a descending staircase pattern instead of flat |
-
-<Note>
-  Scaffold is categorized under **World** in the source (`Category::WORLD`). Requires at least one placeable block in your hotbar.
-</Note>
 
 ---
 
@@ -266,9 +257,9 @@ Teleports you back to a safe saved position if you fall more than a configurable
 
 ## NoSlowDown
 
-Removes the movement slowdown applied when holding items such as bows, food, shields, or when in cobwebs.
+Removes the movement slowdown applied when holding items such as bows, food, or shields.
 
-**Tooltip:** *"NoSlowDown"* · No configurable settings. Operates via memory patch on enable/disable.
+**Tooltip:** *"Don't get slowed down when blocking or eating"* · No configurable settings. Operates via memory patch on enable/disable.
 
 ---
 
@@ -276,17 +267,25 @@ Removes the movement slowdown applied when holding items such as bows, food, shi
 
 Prevents cobwebs from slowing your movement by modifying web collision handling each tick.
 
-**Tooltip:** *"NoWeb"* · No configurable settings.
+**Tooltip:** *"Ignore cobwebs slowdown"* · No configurable settings.
 
 ---
 
-## Velocity *(Movement)*
+## InventoryMove
 
-Eliminates or reduces knockback by intercepting and modifying velocity applied to your player.
+Allows you to move your character using WASD while the inventory screen is open.
+
+**Tooltip:** *"Move even though you have your inventory open"* · No configurable settings.
+
+---
+
+## Velocity
+
+Reduces or eliminates knockback received from enemy hits by modifying incoming velocity values.
 
 **Tooltip:** *"Don't ever take knockback again"*
 
 | Setting | Type | Default | Range | Description |
 |---|---|---|---|---|
-| `Linear Modifier` | float | 0.0 | 0.0 – 1.0 | Horizontal knockback multiplier |
-| `Height Modifier` | float | 0.0 | 0.0 – 1.0 | Vertical knockback multiplier |
+| `Linear Modifier` | float | 0.0 | 0.0 – 1.0 | Horizontal knockback multiplier (0 = no knockback) |
+| `Height Modifier` | float | 0.0 | 0.0 – 1.0 | Vertical knockback multiplier (0 = no knockback) |

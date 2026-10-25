@@ -1,5 +1,5 @@
 ---
-title: "Build Horion from Source with Visual Studio"
+title: "Build Horion from Source with Visual Studio on Windows"
 sidebarTitle: "Build from Source"
 description: "Clone the Horion repository, restore NuGet packages, and compile Horion.sln with Visual Studio to produce a custom Horion.dll ready for injection."
 ---
@@ -10,24 +10,25 @@ Building Horion from source gives you full control over the codebase — you can
 
 You need the following tools installed on a **Windows 10 or Windows 11** machine before you begin:
 
-<CardGroup cols={2}>
-  <Card title="Visual Studio 2019 or later" icon="microsoft">
-    Install the **Desktop development with C++** workload. This pulls in the MSVC compiler, linker, and the Windows SDK. Visual Studio 2022 works equally well.
-  </Card>
-  <Card title="Windows 10 SDK" icon="windows">
-    The project targets `WindowsTargetPlatformVersion 10.0`. Ensure at least one Windows 10 or 11 SDK is installed via the Visual Studio Installer.
-  </Card>
-  <Card title="NuGet Package Manager" icon="box">
-    Included with Visual Studio's C++ workload. Required to restore `directxtk_desktop_2017` and `Microsoft.XAudio2.Redist` before the first build.
-  </Card>
-  <Card title="Git" icon="code-branch">
-    Needed to clone the repository. Download from [git-scm.com](https://git-scm.com) if not already installed.
-  </Card>
-</CardGroup>
+<Note>
+  **Visual Studio 2019 or later** with the **Desktop development with C++** workload is required. This pulls in the MSVC compiler, linker, and the Windows SDK. Visual Studio 2022 is equally supported.
+</Note>
 
 <Note>
-  **Windows is the only supported build platform.** Horion depends on Win32 APIs, DirectX 11 (`d3dx11`), and the Chakra JavaScript runtime — none of which are available on macOS or Linux. The `.vcxproj` targets MSVC toolset `v142` (VS 2019+).
+  **Windows 10 SDK** — The project targets `WindowsTargetPlatformVersion 10.0`. Ensure at least one Windows 10 or 11 SDK is installed via the Visual Studio Installer.
 </Note>
+
+<Note>
+  **NuGet Package Manager** — Included with Visual Studio's C++ workload. Required to restore `directxtk_desktop_2017` and `Microsoft.XAudio2.Redist` before the first build.
+</Note>
+
+<Note>
+  **Git** — Needed to clone the repository. Download from [git-scm.com](https://git-scm.com) if not already installed.
+</Note>
+
+<Warning>
+  **Windows is the only supported build platform.** Horion depends on Win32 APIs, DirectX 11, and the Chakra JavaScript runtime — none of which are available on macOS or Linux. The x64 configurations use MSVC toolset `v142` (VS 2019+); the Win32 configurations use toolset `v141`.
+</Warning>
 
 ## NuGet Dependencies
 
@@ -77,17 +78,17 @@ These are fetched from NuGet.org and do not require any manual download.
   </Step>
 
   <Step title="Select the Release Configuration">
-    In the Visual Studio toolbar, open the **Solution Configurations** dropdown and select **Release**. Choose the appropriate platform for your system from the **Solution Platforms** dropdown — **x64** is recommended and matches the 64-bit Minecraft: Bedrock Edition process.
+    In the Visual Studio toolbar, open the **Solution Configurations** dropdown and select **Release**. Open the **Solution Platforms** dropdown and select **x64** — this matches the 64-bit `Minecraft.Windows.exe` process and uses the `v142` toolset.
 
     <Info>
-      The solution also exposes a `BetaConf` configuration, which adds the `_BETA` preprocessor definition and enables beta-only code paths. Use `Release` for a standard production build.
+      The solution exposes four configurations: `Debug|Win32`, `Release|Win32`, `Debug|x64`, `Release|x64`, and `BetaConf` variants for both platforms. The `BetaConf` configurations add the `_BETA` preprocessor definition to enable beta-only code paths. Use `Release|x64` for a standard production build.
     </Info>
   </Step>
 
   <Step title="Build the Solution">
     Press **Ctrl+Shift+B** or go to **Build → Build Solution**. Visual Studio will compile all source files and link `Horion.dll`.
 
-    A successful build produces the DLL at a path similar to:
+    A successful build produces the DLL at:
 
     ```
     Horion\x64\Release\Horion.dll

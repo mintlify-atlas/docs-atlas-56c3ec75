@@ -8,13 +8,14 @@ Every enhancement in Horion — from Fly to KillAura — is built as a **module*
 
 ## The `IModule` Base Class
 
-`IModule` is the abstract base defined in `Module/Modules/Module.h`. Every concrete module must implement `getModuleName()` and can override any of the virtual lifecycle hooks it needs. The class holds three private pieces of state that the rest of the client reads through accessors:
+`IModule` is the abstract base defined in `Module/Modules/Module.h`. Every concrete module must implement `getModuleName()` and can override any of the virtual lifecycle hooks it needs. The class holds several private pieces of state that the rest of the client reads through accessors:
 
 | Field | Type | Purpose |
 |---|---|---|
 | `enabled` | `bool` | Whether the module is currently active |
 | `keybind` | `int` | Virtual-key code that toggles the module |
 | `category` | `Category` | Grouping used by the ClickGUI |
+| `tooltip` | `const char*` | Short description shown in the ClickGUI |
 
 ```cpp
 // Simplified view of the IModule private fields (Module.h)
@@ -62,7 +63,7 @@ enum class Category {
     Locomotion modifiers — Fly, Speed, Bhop, Glide, Jesus, Spider, Step, HighJump, etc.
   </Card>
   <Card title="PLAYER (3)" icon="user">
-    Local-player utilities — AutoTotem, AutoArmor, AutoGapple, NoFall, FastEat, InventoryMove, etc.
+    Local-player utilities — AutoTotem, AutoArmor, AutoGapple, NoFall, FastEat, InventoryMove, NoFriends, etc.
   </Card>
   <Card title="WORLD (4)" icon="earth-americas">
     World interaction — Scaffold, Nuker, Fucker, InstaBreak, Reach, ChestAura, etc.
@@ -90,9 +91,9 @@ virtual void onEnable();
 virtual void onDisable();
 ```
 
-<Info>
+<Note>
 `onTick` is only called when `isEnabled()` is `true`, unless the module overrides `callWhenDisabled()` to return `true` — a pattern used by always-active modules like HudModule.
-</Info>
+</Note>
 
 ### Render Hooks
 
@@ -129,7 +130,7 @@ virtual void onLoadConfig(void* conf);
 virtual void onSaveConfig(void* conf);
 ```
 
-These two hooks receive a pointer to the active `nlohmann::json` object. Modules that have registered settings do not need to implement them manually — the setting system handles serialisation automatically.
+These two hooks receive a pointer to the active `nlohmann::json` object. Modules that have registered settings do not need to implement them manually — the setting system handles serialisation automatically. The base `IModule::onLoadConfig` / `IModule::onSaveConfig` implementations iterate `settings` and read/write each entry by name.
 
 ## Setting Types
 

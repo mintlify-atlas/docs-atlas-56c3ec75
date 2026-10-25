@@ -17,9 +17,9 @@ Make sure the following are installed and available before you begin:
 - **NuGet Package Manager** — bundled with Visual Studio; used to restore `directxtk_desktop_2017` and `Microsoft.XAudio2.Redist`
 
 <Note>
-  The project's `Horion.vcxproj` targets the **v142** platform toolset for x64
-  Debug and Release builds. Make sure the MSVC v142 build tools component is
-  selected in the Visual Studio Installer.
+  The project's `Horion.vcxproj` targets the **v142** platform toolset for all
+  x64 configurations (Debug, Release, and BetaConf). Make sure the MSVC v142
+  build tools component is selected in the Visual Studio Installer.
 </Note>
 
 ## Build Steps
@@ -104,9 +104,11 @@ Every pull request triggers an automated build via the GitHub Actions workflow d
 
 ```yaml
 - name: Restore NuGet packages
+  working-directory: ${{env.GITHUB_WORKSPACE}}
   run: nuget restore ${{env.SOLUTION_FILE_PATH}}
 
 - name: Build
+  working-directory: ${{env.GITHUB_WORKSPACE}}
   run: msbuild /m /p:Configuration=${{env.BUILD_CONFIGURATION}} ${{env.SOLUTION_FILE_PATH}}
 ```
 
@@ -152,8 +154,10 @@ BasedOnStyle: Google
 UseTab: ForContinuationAndIndentation
 IndentWidth: 4
 TabWidth: 4
+IndentCaseLabels: false
 ColumnLimit: 0
 BreakBeforeBraces: Attach
+AccessModifierOffset: -4
 Language: Cpp
 ```
 

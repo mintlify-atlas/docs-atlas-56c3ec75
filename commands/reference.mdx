@@ -1,7 +1,7 @@
 ---
 title: "Horion Command Reference: All Built-in Commands"
 sidebarTitle: "Reference"
-description: "Complete reference for every built-in Horion command: syntax, arguments, aliases, and usage examples for all 35+ commands in Minecraft Bedrock Edition."
+description: "Complete reference for every built-in Horion command: syntax, arguments, aliases, and usage examples for all 34 commands in Minecraft Bedrock Edition."
 ---
 
 This page documents every command that ships with Horion, extracted directly from the source code. Each entry lists the exact command name, its registered aliases, the full usage string, a description of what it does, a breakdown of every argument, and a practical example. Commands are grouped alphabetically. All examples assume the default prefix (`.`).
@@ -22,7 +22,7 @@ This page documents every command that ships with Horion, extracted directly fro
 
 **Usage:** `.bind <module> <key>`
 
-**Description:** Binds a module to a keyboard key so it can be toggled with that key at any time. Key names are matched case-insensitively. Use the special key name `none` to unbind a key without removing the module. If you run `.bind <module>` with no key, Horion prints the module's current keybind.
+**Description:** Binds a module to a keyboard key so it can be toggled with that key at any time. Key names are matched case-insensitively. Use the special key name `none` to unbind a key without removing the module. If you run `.bind <module>` with no key argument, Horion prints the module's current keybind.
 
 | Argument | Type | Required | Description |
 |---|---|---|---|
@@ -45,7 +45,7 @@ This page documents every command that ships with Horion, extracted directly fro
 
 **Usage:** `.unbind <module | all>`
 
-**Description:** Removes the keybind from the specified module, setting it to `0x0` (unbound). Passing `all` instead of a module name prompts a confirmation message; append `force` to actually unbind every module at once.
+**Description:** Removes the keybind from the specified module, setting it to `0x0` (unbound). Passing `all` instead of a module name prints a confirmation message; append `force` to actually unbind every module at once.
 
 | Argument | Type | Required | Description |
 |---|---|---|---|
@@ -151,13 +151,13 @@ This page documents every command that ships with Horion, extracted directly fro
 
 **Command:** `setprefix` · **Alias:** `prefix`
 
-**Usage:** `.setprefix <char>`
+**Usage:** `.setprefix <prefix>`
 
-**Description:** Replaces the single-character prefix used to identify Horion commands. The new prefix takes effect immediately for all subsequent commands in the same session. The change is saved in your config.
+**Description:** Replaces the single-character prefix used to identify Horion commands. The argument must be exactly one character long. The new prefix takes effect immediately for all subsequent commands in the same session. The change is saved in your config.
 
 | Argument | Type | Required | Description |
 |---|---|---|---|
-| `char` | single character | ✅ | The new prefix character (must be exactly 1 character) |
+| `prefix` | single character | ✅ | The new prefix character (must be exactly 1 character) |
 
 **Examples:**
 ```
@@ -190,23 +190,18 @@ This page documents every command that ships with Horion, extracted directly fro
 
 <AccordionGroup>
 
-<Accordion title="help — List commands or show usage for a specific command">
+<Accordion title="help — List all registered commands">
 
 **Command:** `help` · **Alias:** `h`
 
-**Usage:** `.help [command]`
+**Usage:** `.help`
 
-**Description:** With no arguments, iterates through every registered command and prints `<name> - <description>` for each one. When a command name is passed as the first argument, Horion prints the usage string for that command (as returned by `getUsage()`).
+**Description:** Iterates through every registered command and prints `<name> - <description>` for each one. This command takes no arguments — it always outputs the full command list.
 
-| Argument | Type | Required | Description |
-|---|---|---|---|
-| `command` | string | ❌ | Name of a specific command to look up |
-
-**Examples:**
+**Example:**
 ```
-.help               # list all commands
-.h bind             # show bind usage
-.help enchant       # show enchant usage
+.help
+.h
 ```
 
 </Accordion>
@@ -278,13 +273,13 @@ This page documents every command that ships with Horion, extracted directly fro
 
 **Command:** `playertp`
 
-**Usage:** `.playertp <playerName>`
+**Usage:** `.playertp <NameOfThePlayer>`
 
 **Description:** Searches the entity list for a player whose name tag contains the given substring (case-insensitive) and teleports you directly to their position. If no matching player is found, an error message is shown.
 
 | Argument | Type | Required | Description |
 |---|---|---|---|
-| `playerName` | string | ✅ | Full or partial name of the target player |
+| `NameOfThePlayer` | string | ✅ | Full or partial name of the target player |
 
 **Examples:**
 ```
@@ -300,7 +295,7 @@ This page documents every command that ships with Horion, extracted directly fro
 
 **Usage:** `.relativeteleport <X> <Y> <Z>`
 
-**Description:** Offsets your position by the given deltas relative to your current eye position. Positive Y moves you upward; negative Y moves you down (useful as a vertical clip). All three values are required and accept floating-point numbers.
+**Description:** Offsets your position by the given deltas relative to your current eye position (`eyePos0`). Positive Y moves you upward; negative Y moves you down (useful as a vertical clip). All three values are required and accept floating-point numbers.
 
 | Argument | Type | Required | Description |
 |---|---|---|---|
@@ -323,7 +318,7 @@ This page documents every command that ships with Horion, extracted directly fro
 
 **Usage:** `.top`
 
-**Description:** Scans upward from your current position block by block. First it finds the nearest solid block above you, then continues scanning until it finds two consecutive air blocks — and teleports you there. If there are no blocks above you, or no open air pocket above the highest block, it tells you so.
+**Description:** Scans upward from your current position block by block. First it finds the nearest solid block above you, then continues scanning until it finds two consecutive air blocks — and teleports you there. If there are no blocks above you, or no open air pocket exists above the highest block, it tells you so.
 
 <Warning>
   The `top` command description notes it is **highly recommended against** using this inside the Nether, where the bedrock ceiling could lead to unexpected results.
@@ -355,6 +350,7 @@ This page documents every command that ships with Horion, extracted directly fro
 .waypoint add base              # save current pos as "base"
 .wp add farm 100 64 -200        # save explicit coords as "farm"
 .wp teleport base               # teleport to "base"
+.wp tp base                     # shorthand teleport sub-command
 .wp remove farm                 # delete "farm"
 .waypoint removeall             # clear all waypoints
 ```
@@ -365,7 +361,7 @@ This page documents every command that ships with Horion, extracted directly fro
 
 **Command:** `path` · **Alias:** `joe`
 
-**Usage:** `.path <y|xz|xyz|player> [args]`
+**Usage:** `.path <y|xz|xyz> [args]`
 
 **Description:** Starts Horion's built-in pathfinder (internally called "Joe") towards a goal. Four goal types are supported: navigate to a target **Y level**, navigate to an **XZ** position (ignoring Y), navigate to a specific **XYZ** block, or navigate to a **player** by name. The FollowPathModule must not already be active when you run the command.
 
@@ -403,7 +399,7 @@ This page documents every command that ships with Horion, extracted directly fro
 
 **Command:** `give`
 
-**Usage:** `.give <itemName> <count> [itemData] [nbt]`
+**Usage:** `.give <itemName> <count> [itemData] [NBT]`
 
 **Description:** Spawns items directly into the first available inventory slots. Accepts both numeric item IDs and string item names (e.g. `diamond_sword`). Counts larger than 64 are split across multiple stacks automatically. When a fifth argument is provided, the NBT compound tag is read from the clipboard and applied to the generated item.
 
@@ -412,7 +408,7 @@ This page documents every command that ships with Horion, extracted directly fro
 | `itemName` | string or int | ✅ | Item name (`diamond_sword`) or numeric ID |
 | `count` | int | ✅ | Total number of items to give |
 | `itemData` | int | ❌ | Item data/damage value (default `0`) |
-| `nbt` | flag | ❌ | Any 5th argument triggers clipboard NBT application |
+| `NBT` | flag | ❌ | Any 5th argument triggers clipboard NBT application |
 
 **Examples:**
 ```
@@ -428,7 +424,7 @@ This page documents every command that ships with Horion, extracted directly fro
 
 **Command:** `enchant`
 
-**Usage:** `.enchant <enchantment> <level> [mode]`
+**Usage:** `.enchant <enchantment> [level] <mode: auto / manual : 1/0>`
 
 **Description:** Applies an enchantment to the item currently in your main hand. The enchantment can be specified as a **name string** (e.g. `sharpness`) or a **numeric ID**. Use the special name `all` to apply every enchantment at once. Level defaults to `32767` (maximum). The optional `mode` argument controls whether inventory transaction actions are automatically sent (`1` = auto, `0` = manual); default is auto (`1`).
 
@@ -454,21 +450,21 @@ This page documents every command that ships with Horion, extracted directly fro
 
 **Command:** `setoffhand` · **Alias:** `soh`
 
-**Usage:** `.setoffhand <itemName> <count> [itemData] [nbt]`
+**Usage:** `.setoffhand <itemName> <count> <itemData>`
 
-**Description:** Spawns the specified item directly into the player's offhand slot. Accepts item names or numeric IDs. If a fifth argument is provided, the NBT compound tag is read from the clipboard and applied to the item before placing it in the offhand.
+**Description:** Spawns the specified item directly into the player's offhand slot. Accepts item names or numeric IDs. The third argument sets the item data/damage value. If a fifth argument is provided, the NBT compound tag is read from the clipboard and applied to the item before placing it in the offhand.
 
 | Argument | Type | Required | Description |
 |---|---|---|---|
 | `itemName` | string or int | ✅ | Item name or numeric ID |
-| `count` | int | ✅ | Stack size (max 64 for a single offhand item) |
-| `itemData` | int | ❌ | Item data/damage value (default `0`) |
-| `nbt` | flag | ❌ | Any 5th argument triggers clipboard NBT application |
+| `count` | int | ✅ | Stack size |
+| `itemData` | int | ✅ | Item data/damage value |
+| `NBT` | flag | ❌ | Any 5th argument triggers clipboard NBT application |
 
 **Examples:**
 ```
-.setoffhand shield 1
-.soh totem_of_undying 1
+.setoffhand shield 1 0
+.soh totem_of_undying 1 0
 .setoffhand 522 1 0       # totem by numeric ID
 ```
 
@@ -478,7 +474,7 @@ This page documents every command that ships with Horion, extracted directly fro
 
 **Command:** `dupe` · **Alias:** `d`
 
-**Usage:** `.dupe [count] [mode]`
+**Usage:** `.dupe <count> <mode: give / offhand : 1/0>`
 
 **Description:** Duplicates the item stack currently held in the main hand. By default the item is given to the inventory (`mode 1 = give`). Setting mode to `0` places the duplicate in the offhand slot instead. The `count` argument overrides the stack size of the duplicate.
 
@@ -501,9 +497,9 @@ This page documents every command that ships with Horion, extracted directly fro
 
 **Command:** `nbt` · **Alias:** `nbtraw`
 
-**Usage:** `.nbt <read|save|write|load>` or `.nbtraw write <nbt>`
+**Usage:** `.nbt <read/write>` · (alias) `.nbtraw write <nbt>`
 
-**Description:** Reads NBT data from the entity or block entity you are pointing at (or the held item's tag) and copies it to the clipboard, or writes NBT from the clipboard back onto the held item. Point your crosshair at a block entity or mob before using `read`. The `nbtraw` alias allows inline NBT to be passed directly on the command line instead of from the clipboard.
+**Description:** Reads NBT data from the entity or block entity you are pointing at (or the held item's tag) and copies it to the clipboard, or writes NBT from the clipboard back onto the held item. Point your crosshair at a block entity or mob before using `read`. The `nbtraw` alias requires the `write` sub-command and allows inline NBT to be passed directly on the command line instead of from the clipboard.
 
 | Sub-command | Description |
 |---|---|
@@ -600,7 +596,7 @@ This page documents every command that ships with Horion, extracted directly fro
 
 **Command:** `xp`
 
-**Usage:** `.xp <amount[L]>`
+**Usage:** `.xp <amount>L`
 
 **Description:** Adds experience to the local player. If the amount ends with `L` (case-insensitive), it is treated as **experience levels** and calls `addLevels()`. Otherwise it calls `addExperience()` to add raw XP points.
 
@@ -620,7 +616,7 @@ This page documents every command that ships with Horion, extracted directly fro
 
 **Command:** `friend` · **Alias:** `friendlist`
 
-**Usage:** `.friend <add|remove> <playerName>`
+**Usage:** `.friend <add/remove>`
 
 **Description:** Adds or removes players from Horion's internal friend list. Friends are excluded from targeting by combat modules (e.g. KillAura). The player must be in render distance for `add` to resolve their full name. The `remove` sub-command works by partial name match.
 
@@ -652,7 +648,7 @@ This page documents every command that ships with Horion, extracted directly fro
 
 **Usage:** `.say <message>`
 
-**Description:** Constructs a `C_TextPacket` and sends it directly to the server's loopback packet sender, bypassing Minecraft's normal chat input flow. Supports escape sequences: `\n` (newline), `\t` (tab), `\\` (literal backslash), `\"` (quote). All tokens after the command name are joined with spaces.
+**Description:** Constructs a `C_TextPacket` and sends it directly to the server's loopback packet sender, bypassing Minecraft's normal chat input flow. Supports escape sequences: `\n` (newline), `\r` (carriage return), `\t` (tab), `\f` (form feed), `\\` (literal backslash), `\"` (quote). All tokens after the command name are joined with spaces.
 
 | Argument | Type | Required | Description |
 |---|---|---|---|
@@ -670,7 +666,7 @@ This page documents every command that ships with Horion, extracted directly fro
 
 **Command:** `spammer` · **Alias:** `spam`
 
-**Usage:** `.spammer <message|delay|bypass|length|manual> <value>`
+**Usage:** `.spammer <message/delay/bypass/length/manual> <string/int/bool>`
 
 **Description:** Configures the Spammer module's settings or sends manual spam messages. The `message` sub-command sets the text the spammer will send. `delay` sets the interval (in ticks). `bypass` enables or disables the anti-spam bypass (appends a random string). `length` sets the length of the bypass string. `manual` sends a message a specified number of times immediately.
 
@@ -697,7 +693,7 @@ This page documents every command that ships with Horion, extracted directly fro
 
 **Command:** `namespoof` · **Aliases:** `ns`, `fakename`, `fn`
 
-**Usage:** `.namespoof <name|reset> [displayName]`
+**Usage:** `.namespoof <name/reset> <name>`
 
 **Description:** Sets a fake name that Horion sends to realms and BDS servers in place of your actual Xbox gamertag. Use the `name` sub-command followed by the desired display name. Use `reset` to clear the fake name and revert to your real username. A reconnect is required for the change to take effect on the server.
 
@@ -728,9 +724,9 @@ This page documents every command that ships with Horion, extracted directly fro
 
 **Command:** `commandblockexploit` · **Alias:** `cbe`
 
-**Usage:** `.commandblockexploit <beehive|beenest|movingblock|invisible|spoof> <command>`
+**Usage:** `.commandblockexploit <beehive/beenest/movingblock/invisible/spoof> <command>`
 
-**Description:** Crafts a specially-tagged item using beehive/bee_nest/movingblock NBT structures that contain a command block minecart entity. When the item is placed in the world, the embedded command executes server-side without requiring operator status. Five exploit variants are provided for different server configurations and anti-cheat setups.
+**Description:** Crafts a specially-tagged item using beehive/bee\_nest/movingblock NBT structures that contain a command block minecart entity. When the item is placed in the world, the embedded command executes server-side without requiring operator status. Five exploit variants are provided for different server configurations and anti-cheat setups.
 
 | Variant | Short alias | Notes |
 |---|---|---|
@@ -815,21 +811,6 @@ This page documents every command that ships with Horion, extracted directly fro
 **Example:**
 ```
 .bruh
-```
-
-</Accordion>
-
-<Accordion title="test — Internal debug command">
-
-**Command:** `test`
-
-**Usage:** `.test`
-
-**Description:** An internal debugging command that logs inventory slot info and swaps slots 1 and 2 in your inventory. Output goes to the Horion debug log rather than chat. Not intended for regular use — included here for completeness.
-
-**Example:**
-```
-.test
 ```
 
 </Accordion>

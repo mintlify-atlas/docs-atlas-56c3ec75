@@ -1,7 +1,7 @@
 ---
-title: "Horion: Minecraft Bedrock Edition Utility Mod"
+title: "Introduction to Horion: Bedrock Edition Utility Mod"
 sidebarTitle: "Introduction"
-description: "Horion is an open-source, DLL-injected utility mod for Minecraft: Bedrock Edition on Windows, featuring 60+ modules, 30+ commands, and a JavaScript scripting engine."
+description: "Open-source DLL-injected utility mod for Minecraft: Bedrock Edition on Windows, with 60+ modules, 30+ commands, and a JavaScript scripting API."
 ---
 
 Horion is an open-source utility mod for Minecraft: Bedrock Edition on Windows that works by injecting a DLL directly into the running game process. This page covers what Horion is, how it is structured, the full range of features it provides, and the license terms that govern forking and redistribution. Whether you are a player looking to explore its capabilities or a developer evaluating the codebase, this introduction gives you the complete picture before you dive into any specific feature area.
@@ -25,7 +25,7 @@ Horion's core functionality is organized into a **module system** with over 60 i
 | Category   | Description                                                      |
 | ---------- | ---------------------------------------------------------------- |
 | `COMBAT`   | Offensive and defensive combat automation (KillAura, Aimbot, CrystalAura, Criticals, Reach, Velocity, …) |
-| `VISUAL`   | Rendering enhancements and overlays (ESP, Tracers, FullBright, Xray, NameTags, ChestESP, Freecam, …) |
+| `VISUAL`   | Rendering enhancements and overlays (ESP, Tracers, FullBright, Xray, NameTags, StorageESP, Freecam, …) |
 | `MOVEMENT` | Locomotion and physics modifications (Fly, Speed, NoFall, Jesus, Bhop, Phase, Step, Scaffold, …) |
 | `PLAYER`   | Player-state automation (AutoArmor, AutoTotem, AutoSneak, AutoSprint, FastEat, InventoryMove, …) |
 | `WORLD`    | World-interaction tools (Nuker, InstaBreak, ChestStealer, Fucker, ChestAura, …) |
@@ -51,7 +51,7 @@ Horion ships with **30+ built-in commands** that execute from the Minecraft chat
 
 ### JavaScript Scripting Engine
 
-Horion embeds Microsoft's **ChakraCore** JavaScript engine, allowing you to write scripts that interact with the game through a rich API. Scripts can register custom commands, create full custom modules that appear under the `CUSTOM` category in the ClickGUI, manipulate the local player, query entity lists, and draw custom overlays. The scripting surface is organized into namespaces including `Game`, `LocalPlayer`, `ModuleManager`, `CommandManager`, `Entity`, `Level`, `Draw`, and `Vector3`.
+Horion embeds Microsoft's **ChakraCore** JavaScript engine, allowing you to write scripts that interact with the game through a rich API. Scripts can register custom commands, create full custom modules that appear under the `CUSTOM` category in the ClickGUI, manipulate the local player, query entity lists, and draw custom overlays. The scripting surface is organized into namespaces including `Game`, `LocalPlayer`, `ModuleManager`, `CommandManager`, `Entity`, `Level`, `Draw`, `Inventory`, `Vector2`, and `Vector3`.
 
 ### JSON Configuration Management
 
@@ -77,14 +77,13 @@ The DLL entry point (`Loader.cpp`) runs on a background thread spawned from `Dll
 
 Horion is released under the **Creative Commons Attribution-NonCommercial 4.0 International** license ([CC BY-NC 4.0](https://creativecommons.org/licenses/by-nc/4.0/)).
 
-<CardGroup cols={2}>
-  <Card title="You CAN" icon="circle-check" iconType="solid">
-    Fork the repository and distribute your own build, provided you give appropriate credit to the original project.
-  </Card>
-  <Card title="You CANNOT" icon="circle-xmark" iconType="solid">
-    Sell any code covered by this license or use Horion commercially in any form.
-  </Card>
-</CardGroup>
+<Note>
+  **You CAN** fork the repository and distribute your own build, provided you give appropriate credit to the original project.
+</Note>
+
+<Warning>
+  **You CANNOT** sell any code covered by this license or use Horion commercially in any form.
+</Warning>
 
 Note that some bundled third-party components — including ChakraCore and the DirectX 11 toolkit — carry their own separate licenses.
 

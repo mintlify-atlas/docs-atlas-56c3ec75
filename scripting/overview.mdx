@@ -19,7 +19,6 @@ The global API objects are capitalised: **`Game`**, **`Horion`**, **`Vec3`**, an
 | Command | Description |
 |---|---|
 | `.script load <folder-path>` | Load a script folder (must contain `start.js`) |
-| `.script unload <folder-path>` | Unload a script by its folder path |
 | `.script list` | List all currently loaded scripts |
 
 **Example:**
@@ -42,7 +41,7 @@ Every script goes through the following stages:
     Inside `start.js`, call `Horion.getModuleManager().registerModule("ModuleName")` to create a new module, then attach event callbacks with `module.registerCallback("onTick", fn)`. Valid callback events are `onTick`, `onEnable`, `onDisable`, `onAttack`, `onRender`, and `onRender2d`.
   </Step>
   <Step title="Toggle the module in the ClickGUI">
-    Your custom module now appears in Horion's ClickGUI under the category you chose. Toggle it on or off just like any built-in module. When enabled, Horion invokes your registered callbacks at the appropriate game events.
+    Your custom module now appears in Horion's ClickGUI. Toggle it on or off just like any built-in module. When enabled, Horion invokes your registered callbacks at the appropriate game events.
   </Step>
 </Steps>
 
@@ -74,7 +73,7 @@ Every script goes through the following stages:
 Each script runs on its **own dedicated thread**. When a game event fires (such as a tick or render), Horion dispatches a callback invocation into the script's callback queue. The script thread drains the queue and executes callbacks one at a time. This means:
 
 - JavaScript execution is always single-threaded per script.
-- Callbacks are executed from Horion's internal game thread dispatcher, so long-running callbacks will block the next event.
+- Callbacks are dispatched from Horion's internal game thread, so long-running callbacks will delay the next event.
 - There is no native `setTimeout`/`setInterval`; use the `onTick` callback for periodic work.
 
 <Warning>

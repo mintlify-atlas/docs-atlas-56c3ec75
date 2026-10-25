@@ -7,7 +7,7 @@ description: "Practical Horion JavaScript scripting examples: register custom mo
 The examples on this page demonstrate real, working scripts built on the Horion scripting API. Each example is a complete `start.js` file you can drop into its own folder and load immediately. All examples use the actual global names (`Game`, `Horion`, `Vec3`, `Vec2`), the correct callback event strings (`onTick`, `onRender`, `onRender2d`, etc.), and the real method signatures from the source code.
 
 <Tip>
-Place your script files in a dedicated folder such as `C:\Users\<you>\AppData\Roaming\Horion\scripts\my-module\`, then load it with `.script load C:\Users\<you>\AppData\Roaming\Horion\scripts\my-module`. The folder **must** contain a file named exactly `start.js`. To reload after editing, unload it first with `.script unload <path>` and then load it again — there is no hot-reload; a fresh load always reads the file from disk.
+Place your script files in a dedicated folder such as `C:\Users\<you>\AppData\Roaming\Horion\scripts\my-module\`, then load it with `.script load C:\Users\<you>\AppData\Roaming\Horion\scripts\my-module`. The folder **must** contain a file named exactly `start.js`. To reload after editing, unload the script and load it again — there is no hot-reload; a fresh load always reads the file from disk.
 </Tip>
 
 <Warning>
@@ -103,8 +103,8 @@ hud.registerCallback("onRender2d", function() {
     var player = Game.getLocalPlayer();
     if (!player.isValid()) return;
 
-    var pos  = player.getPosition();
-    var vel  = player.getVelocity();
+    var pos   = player.getPosition();
+    var vel   = player.getVelocity();
     var speed = Math.sqrt(vel.x * vel.x + vel.z * vel.z);
     var onGround = player.isOnGround();
 
@@ -114,16 +114,16 @@ hud.registerCallback("onRender2d", function() {
 
     // Background panel
     draw.setColor(0, 0, 0, 0.5);
-    draw.fillRectangle2d(new Vec2(x - 2, y - 2), new Vec2(x + 160, y + lineH * 3 + 4));
+    draw.fillRectangle2d(Vec2(x - 2, y - 2), Vec2(x + 160, y + lineH * 3 + 4));
 
     // Text lines
     draw.setColor(1, 1, 1, 1);
     draw.drawText2d(
         "XYZ: " + pos.x.toFixed(1) + " " + pos.y.toFixed(1) + " " + pos.z.toFixed(1),
-        new Vec2(x, y)
+        Vec2(x, y)
     );
-    draw.drawText2d("Speed: " + speed.toFixed(3), new Vec2(x, y + lineH));
-    draw.drawText2d("Ground: " + onGround,        new Vec2(x, y + lineH * 2));
+    draw.drawText2d("Speed: " + speed.toFixed(3), Vec2(x, y + lineH));
+    draw.drawText2d("Ground: " + onGround,        Vec2(x, y + lineH * 2));
 });
 
 log("ScriptHUD loaded");
@@ -133,7 +133,7 @@ log("ScriptHUD loaded");
 
 ## Example 4: Execute commands from a script
 
-Use `CommandManager.executeCommand()` to trigger any Horion command programmatically. This example registers a module that disables all modules when enabled.
+Use `CommandManager.executeCommand()` to trigger any Horion command programmatically. Pass the command **without** a leading dot — the scripting engine prepends it automatically. This example registers a module that runs `.panic` when enabled.
 
 ```javascript
 // start.js
@@ -144,7 +144,7 @@ var panicMod = mm.registerModule("ScriptPanic");
 
 panicMod.registerCallback("onEnable", function() {
     log("[ScriptPanic] Running .panic now");
-    cm.executeCommand(".panic");
+    cm.executeCommand("panic"); // the engine prepends "." automatically
 });
 
 log("ScriptPanic loaded — enable the module to trigger .panic");
@@ -154,7 +154,7 @@ log("ScriptPanic loaded — enable the module to trigger .panic");
 
 ## Example 5: Interact with the inventory
 
-Inspect every inventory slot and log non-air items, then switch to hotbar slot 0.
+Inspect every inventory slot and log non-air items. `getSlot()` returns the currently selected hotbar item (no argument). `getHeld(index)` returns the item at a specific slot index.
 
 ```javascript
 // start.js
@@ -171,8 +171,8 @@ invMod.registerCallback("onEnable", function() {
 
     var inv = player.getInventory();
 
-    // Log held item
-    var held = inv.getHeld();
+    // Log the currently selected hotbar item
+    var held = inv.getSlot();
     log("Held: " + held.name + " x" + held.amount + " (id=" + held.id + ")");
 
     // Log armor
@@ -202,7 +202,7 @@ log("InvLogger loaded");
 ```
 
 <Note>
-`isFull` is a **property**, not a method — access it as `inv.isFull`, not `inv.isFull()`.
+`isFull` is a **property**, not a method — access it as `inv.isFull`, not `inv.isFull()`. `getSlot()` takes no arguments and returns the currently selected item; use `getHeld(slotIndex)` to read a specific slot by index.
 </Note>
 
 ---
@@ -258,16 +258,16 @@ var bbox = mm.registerModule("ScriptBBox");
 function makeBox(pos, w, h) {
     var hw = w / 2;
     return [
-        new Vec3(pos.x - hw, pos.y,     pos.z - hw),
-        new Vec3(pos.x + hw, pos.y,     pos.z - hw),
-        new Vec3(pos.x + hw, pos.y,     pos.z + hw),
-        new Vec3(pos.x - hw, pos.y,     pos.z + hw),
-        new Vec3(pos.x - hw, pos.y,     pos.z - hw),
-        new Vec3(pos.x - hw, pos.y + h, pos.z - hw),
-        new Vec3(pos.x + hw, pos.y + h, pos.z - hw),
-        new Vec3(pos.x + hw, pos.y + h, pos.z + hw),
-        new Vec3(pos.x - hw, pos.y + h, pos.z + hw),
-        new Vec3(pos.x - hw, pos.y + h, pos.z - hw)
+        Vec3(pos.x - hw, pos.y,     pos.z - hw),
+        Vec3(pos.x + hw, pos.y,     pos.z - hw),
+        Vec3(pos.x + hw, pos.y,     pos.z + hw),
+        Vec3(pos.x - hw, pos.y,     pos.z + hw),
+        Vec3(pos.x - hw, pos.y,     pos.z - hw),
+        Vec3(pos.x - hw, pos.y + h, pos.z - hw),
+        Vec3(pos.x + hw, pos.y + h, pos.z - hw),
+        Vec3(pos.x + hw, pos.y + h, pos.z + hw),
+        Vec3(pos.x - hw, pos.y + h, pos.z + hw),
+        Vec3(pos.x - hw, pos.y + h, pos.z - hw)
     ];
 }
 

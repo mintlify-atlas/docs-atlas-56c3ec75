@@ -1,22 +1,22 @@
 ---
 title: "Save and Load Module Settings with Horion Configs"
 sidebarTitle: "Config Management"
-description: "Discover how Horion stores JSON config profiles in %APPDATA%, which data each profile captures, and how to switch between named profiles in-game."
+description: "Discover how Horion stores JSON config profiles in the UWP roaming folder, which data each profile captures, and how to switch profiles in-game."
 ---
 
 Horion's config system lets you snapshot the entire client state — every module's enabled flag, every setting value, every keybind, and the command prefix — into a named JSON file. Switching profiles takes a single in-game command, so you can keep separate configurations for different servers, game-modes, or play-styles without manually re-tuning anything.
 
 ## Storage Location
 
-Config files are stored in the Windows **Roaming AppData** folder for Minecraft: Bedrock Edition. `ConfigManager` resolves this path at startup using the WinRT `Windows.Storage.ApplicationData` API, which ensures the correct per-user path regardless of where the game is installed.
+Config files are stored in the Windows **UWP Roaming** folder for Minecraft: Bedrock Edition. `ConfigManager` resolves this path at startup using the WinRT `Windows.Storage.ApplicationData` API (`get_RoamingFolder`), which ensures the correct per-user path regardless of where the game is installed.
 
 ```
-%APPDATA%\Local\Packages\Microsoft.MinecraftUWP_<id>\RoamingState\<name>.h
+%LOCALAPPDATA%\Packages\Microsoft.MinecraftUWP_<id>\RoamingState\<name>.h
 ```
 
-<Info>
-The `.h` file extension is intentional — it is just the container format Horion uses internally. The files are standard JSON and can be opened in any text editor.
-</Info>
+<Note>
+The `.h` file extension is intentional — it is just the container Horion uses internally. The files are standard JSON and can be opened in any text editor.
+</Note>
 
 Each profile is a single file named `<profileName>.h`. The default profile is called `default`, so the first file created is `default.h`.
 
@@ -60,7 +60,10 @@ A typical profile therefore captures:
 - All registered setting values (floats, ints, bools, enums, strings)
 - Per-module keybinds
 - The command prefix character
-- The friend list (persisted through the module that manages it)
+
+<Note>
+The friend list is stored **in memory only** and is not persisted to the config file. You must re-add friends each session using `.friend add <name>`.
+</Note>
 
 ## Serialisation Format
 
@@ -90,34 +93,34 @@ The `"from": "Horion"` key is written on every load as a simple file-origin mark
 
 ## In-Game Usage
 
-The `ConfigCommand` exposes all profile operations through the chat interface:
+The `ConfigCommand` exposes profile operations through the chat interface. The three supported subcommands are `save`, `load`, and `new`:
 
 ```
 .config save              — save the current profile to disk
-.config load <name>       — switch to (or create) a named profile
-.config list              — list all saved profiles
+.config load <name>       — switch to an existing named profile
+.config new <name>        — create and switch to a new named profile
 ```
 
-<Tabs>
-  <Tab title="Save">
+<Steps>
+  <Step title="Save your current profile">
     ```
     .config save
     ```
-    Flushes the current in-memory state to the active profile file. Horion also auto-saves when you switch profiles or when the DLL unloads gracefully.
-  </Tab>
-  <Tab title="Load">
+    Flushes the current in-memory state to the active profile file. Horion also auto-saves when you switch profiles.
+  </Step>
+  <Step title="Load an existing profile">
     ```
     .config load pvp
     ```
-    Saves the current profile first, then reads `pvp.h` from the roaming folder and applies it. If `pvp.h` does not exist yet, Horion creates it (equivalent to passing `create = true`).
-  </Tab>
-  <Tab title="List">
+    Saves the current profile first, then reads `pvp.h` from the roaming folder and applies it. If `pvp.h` does not exist, Horion will report that the config could not be loaded.
+  </Step>
+  <Step title="Create a new profile">
     ```
-    .config list
+    .config new crystal
     ```
-    Enumerates profile files in the roaming folder and prints their names to client chat so you can see what profiles are available before loading one.
-  </Tab>
-</Tabs>
+    Saves the current profile first, then creates `crystal.h` and switches to it. Equivalent to calling `loadConfig("crystal", true)` with `create = true`.
+  </Step>
+</Steps>
 
 ## Switching Profiles Without Losing Changes
 
@@ -145,7 +148,7 @@ Back up your roaming folder before updating Horion. A major update may change se
 
 A sensible workflow:
 
-1. **Create named profiles** for different scenarios — e.g., `.config load crystal` for Crystal PvP, `.config load build` for creative building.
+1. **Create named profiles** for different scenarios — e.g., `.config new crystal` for Crystal PvP, `.config new build` for creative building.
 2. **Save explicitly** with `.config save` after tuning a profile to your liking.
 3. **Copy the roaming folder** to a backup location before installing a Horion update.
 4. After updating, load your backup profile and verify settings; recreate any that reverted to defaults.

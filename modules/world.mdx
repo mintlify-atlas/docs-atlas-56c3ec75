@@ -1,14 +1,10 @@
 ---
-title: "Horion World Modules: Nuker, Teleport, Waypoints"
+title: "Horion World Modules: Nuker, Scaffold, Tower, and More"
 sidebarTitle: "World"
-description: "Full reference for Horion's world interaction modules, including mass block breaking, instant breaking, extended reach, bed destruction, and path following."
+description: "Full reference for Horion's world interaction modules, including mass block breaking, instant breaking, automatic bridging, vertical tower building, and pathfinding."
 ---
 
-Horion's World category contains modules that interact directly with the game world — breaking or placing blocks en masse, extending your block reach, and navigating the terrain automatically. While some of these tools overlap conceptually with movement (Scaffold and Tower place blocks beneath you), this category focuses on world manipulation: Nuker, InstaBreak, Fucker, ChestAura, and the automated pathfinding system.
-
-<Note>
-  Several modules documented in other categories (Scaffold, Tower, ChestAura, ChestStealer, ExtendedBlockReach, Teleport) are categorized under World or adjacent categories in the source. Refer to each module's category note for the exact `Category::` value used.
-</Note>
+Horion's World category contains modules that interact directly with the game world — breaking or placing blocks en masse, extending your block reach, and navigating the terrain automatically. Scaffold and Tower place blocks beneath or below you, while Nuker and InstaBreak focus on rapid destruction. The FollowPathModule provides automated traversal.
 
 <Warning>
   World manipulation modules can cause grief or violations of server rules. Block-breaking modules like Nuker and InstaBreak are detectable by most anticheats. Use responsibly.
@@ -38,79 +34,7 @@ Rapidly breaks all solid blocks within a configurable radius around your charact
 
 Bypasses block-breaking progress entirely, destroying the targeted block the moment you start breaking it.
 
-**Tooltip:** *"InstaBreak"* · No configurable settings.
-
----
-
-## ExtendedBlockReach
-
-Extends the maximum range at which you can place and break blocks far beyond the vanilla 5-block limit.
-
-**Tooltip:** *"Extended reach for placing/breaking blocks"*
-
-| Setting | Type | Default | Range | Description |
-|---|---|---|---|---|
-| `reach` | float | 7.0 | 7.0 – 20.0 | Maximum block interaction distance in blocks |
-
-<Note>
-  ExtendedBlockReach is categorized under **Player** in the source (`Category::PLAYER`).
-</Note>
-
----
-
-## Fucker
-
-Automatically destroys specific types of interactable blocks (beds, eggs, cakes, treasures, chests, barrels) within range each tick. Commonly used in BedWars to destroy enemy beds.
-
-**Tooltip:** *"Destroys certain blocks around you"* · Default keybind: **Numpad 9**
-
-| Setting | Type | Default | Range | Description |
-|---|---|---|---|---|
-| `Range` | int | 5 | 1 – 10 | Scan radius in blocks |
-| `Beds` | bool | true | — | Destroy bed blocks |
-| `Eggs` | bool | true | — | Destroy dragon eggs |
-| `Cakes` | bool | true | — | Destroy cake blocks |
-| `Treasures` | bool | true | — | Destroy treasure/loot blocks |
-| `Chests` | bool | false | — | Destroy chest blocks |
-| `Barrels` | bool | false | — | Destroy barrel blocks |
-
-<Note>
-  Fucker is categorized under **Misc** in the source (`Category::MISC`).
-</Note>
-
----
-
-## ChestAura
-
-Automatically opens nearby chest and storage containers by sending use-block packets, without you needing to click on them.
-
-**Tooltip:** *"Aura for opening chests"*
-
-| Setting | Type | Default | Range | Description |
-|---|---|---|---|---|
-| `Range` | int | 3 | 1 – 10 | Radius in blocks to scan for chests |
-| `EnderChests` | bool | false | — | Also interact with ender chests |
-
-<Note>
-  ChestAura is categorized under **Player** in the source (`Category::PLAYER`).
-</Note>
-
----
-
-## ChestStealer
-
-When you have a chest open, automatically moves all items from the chest into your inventory using simulated or packet-based transfers.
-
-**Tooltip:** *"Automatically takes all items out of a chest"*
-
-| Setting | Type | Default | Range | Description |
-|---|---|---|---|---|
-| `Close Delay` | int | 7 | 0 – 20 | Ticks to wait after stealing before closing |
-| `enhanced` | bool | true | — | Use enhanced packet-based item transfer |
-
-<Note>
-  ChestStealer is categorized under **Player** in the source (`Category::PLAYER`).
-</Note>
+**Tooltip:** *"Break any block instantly"* · Default keybind: **Numpad 4** · No configurable settings.
 
 ---
 
@@ -124,6 +48,10 @@ Automatically places a block beneath your feet every tick as you walk, bridging 
 |---|---|---|---|
 | `Spoof` | bool | false | Silently switch to a block item without a visible hand animation |
 | `Staircase Mode` | bool | false | Build a descending staircase instead of a flat bridge |
+
+<Note>
+  Requires at least one placeable block in your hotbar.
+</Note>
 
 ---
 
@@ -139,67 +67,12 @@ Rapidly builds a vertical tower by placing blocks below you on each jump, propel
 
 ---
 
-## Waypoints
-
-Saves named coordinate bookmarks and renders floating holographic labels in the world at those locations.
-
-**Tooltip:** *"Shows holograms for user-defined coordinates"*
-
-| Setting | Type | Default | Range | Description |
-|---|---|---|---|---|
-| `Size` | float | 0.6 | 0.3 – 1.6 | Label text scale |
-| `Interdimensional` | bool | true | — | Show waypoints from other dimensions |
-| `Show coordinates` | bool | false | — | Display XYZ values below the label |
-
-Waypoints persist across sessions (saved and loaded via Horion's config system). Use the `.waypoint` command to manage them:
-
-```
-.waypoint add <name> [x] [y] [z]
-.waypoint remove <name>
-.waypoint list
-```
-
-<Note>
-  Waypoints is categorized under **Visual** in the source (`Category::VISUAL`).
-</Note>
-
----
-
-## Teleport
-
-Teleports your character to the block you are looking at by clicking on it, using movement packet manipulation.
-
-**Tooltip:** *"Click a block to teleport to it"*
-
-| Setting | Type | Default | Description |
-|---|---|---|---|
-| `Only Hand` | bool | false | Only teleport when a specific item is in your hand |
-| `Push` | bool | false | Use a push/bypass method for the teleport packet |
-
-<Note>
-  Teleport is categorized under **Misc** in the source (`Category::MISC`).
-</Note>
-
----
-
 ## FollowPathModule
 
-Records or receives a path and automatically walks your character along it using the built-in `JoePathFinder` pathfinding system.
+Records or receives a path and automatically walks your character along it using Horion's built-in pathfinding system.
 
-**Tooltip:** *"FollowPath"* · No configurable settings exposed via the settings API. Path data is managed programmatically.
+**Tooltip:** *"Follows joe paths"* · No configurable settings exposed via the settings API. Path data is managed programmatically.
 
 <Note>
   FollowPathModule is categorized under **Movement** in the source (`Category::MOVEMENT`). It integrates with Horion's internal `JoePathFinder` and `JoeMovementController` systems and is primarily used via scripting or API calls.
-</Note>
-
----
-
-## Nbt
-
-Reads the NBT data of the block or entity you are looking at and copies it to your clipboard.
-
-**Tooltip:** *"Nbt"* · No configurable settings. Copies new NBT data whenever the target block changes.
-
-<Note>
-  Nbt is categorized under **Player** in the source (`Category::PLAYER`).
 </Note>

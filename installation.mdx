@@ -1,5 +1,5 @@
 ---
-title: "Install and Inject Horion into Minecraft Bedrock"
+title: "Install and Inject Horion into Minecraft Bedrock Edition"
 sidebarTitle: "Installation"
 description: "Download the Horion injector, launch Minecraft: Bedrock Edition on Windows, and inject the DLL to unlock all modules, commands, and the ClickGUI."
 ---
@@ -10,14 +10,13 @@ Horion is distributed as a pre-built DLL paired with a dedicated injector execut
 
 Before you begin, confirm you have the following:
 
-<CardGroup cols={2}>
-  <Card title="Windows 10 or 11" icon="windows">
-    Horion uses Win32 APIs and DirectX 11. macOS and Linux are not supported.
-  </Card>
-  <Card title="Minecraft: Bedrock Edition" icon="cube">
-    Must be installed through the **Microsoft Store** (the Windows 10/11 Edition). Java Edition is not supported.
-  </Card>
-</CardGroup>
+<Note>
+  **Windows 10 or 11 is required.** Horion uses Win32 APIs and DirectX 11. macOS and Linux are not supported.
+</Note>
+
+<Note>
+  **Minecraft: Bedrock Edition (Microsoft Store)** must be installed through the Microsoft Store (the Windows 10/11 Edition). The Java Edition is not supported.
+</Note>
 
 <Warning>
   Horion targets **specific Minecraft: Bedrock Edition versions**. Using an unsupported game version may cause the injection to fail or the game to crash. Check the [Horion Discord](https://horion.download/discord) or the download page for the currently supported MCBE version before updating your game.
@@ -51,7 +50,7 @@ Download the injector executable to a convenient location on your PC. No install
   </Step>
 
   <Step title="Select the Minecraft Process">
-    The injector will automatically detect the running `Minecraft.Windows.exe` process. Confirm the selection and click **Inject** (or the equivalent button in your injector version). The injector will load `Horion.dll` into the Minecraft process.
+    The injector will list running processes — select `Minecraft.Windows.exe` and confirm the injection. The injector will load `Horion.dll` into the Minecraft process.
   </Step>
 
   <Step title="Confirm Successful Injection">
